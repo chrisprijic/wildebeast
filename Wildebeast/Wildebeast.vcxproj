@@ -14,6 +14,14 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\wb\application.h" />
+    <ClInclude Include="src\wb.h" />
+    <ClInclude Include="src\wb\core.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\wb\application.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{498C940C-3544-D659-9E4B-AFB58A22714A}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
@@ -139,12 +147,6 @@
       <Command>IF EXIST ..\bin\Dist-windows-x86_64\Wildebeast\Wildebeast.dll\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\Wildebeast\Wildebeast.dll "..\bin\Dist-windows-x86_64\Game\" &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\Wildebeast\Wildebeast.dll "..\bin\Dist-windows-x86_64\Game\" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="src\test.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\test.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

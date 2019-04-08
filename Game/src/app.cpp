@@ -1,7 +1,18 @@
-namespace Wildebeast {
-	__declspec (dllimport) void Print();
-}
+#include <wb.h>
+
+class SandboxApp : public wb::Application {
+public:
+	SandboxApp() {
+
+	}
+
+	~SandboxApp() {
+
+	}
+};
 
 void main() {
-	Wildebeast::Print();
+	SandboxApp* app = new SandboxApp();
+
+	app->run();
 }
