@@ -1,6 +1,6 @@
-[submodule "Wildebeast\\vendor\\spdlog"]
-	path = Wildebeast\\vendor\\spdlog
+[submodule "Wildebeast/vendor/spdlog"]
+	path = Wildebeast/vendor/spdlog
 	url = https://github.com/gabime/spdlog
-[submodule "Wildebeast\\vendor\\GLFW"]
-	path = Wildebeast\\vendor\\GLFW
+[submodule "Wildebeast/vendor/GLFW"]
+	path = Wildebeast/vendor/GLFW
 	url = https://github.com/chrisprijic/glfw
