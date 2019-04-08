@@ -14,6 +14,9 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include dirs relative to root (solution)
 IncludeDir = {}
 IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
+IncludeDir["GLFW"] = "Wildebeast/vendor/GLFW/include"
+
+include "Wildebeast/vendor/GLFW"
 
 project "Wildebeast"
     location "Wildebeast"
@@ -41,7 +44,8 @@ project "Wildebeast"
 
     links
     {
-
+		"GLFW",
+		"opengl32.lib"
     }
 
     filter "system:windows"
