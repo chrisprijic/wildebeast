@@ -14,14 +14,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\wb\application.h" />
-    <ClInclude Include="src\wb.h" />
-    <ClInclude Include="src\wb\core.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\wb\application.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{498C940C-3544-D659-9E4B-AFB58A22714A}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
@@ -87,6 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WB_PLATFORM_WINDOWS;WB_BUILD_DLL;WB_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -106,6 +99,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WB_PLATFORM_WINDOWS;WB_BUILD_DLL;WB_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -129,6 +123,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WB_PLATFORM_WINDOWS;WB_BUILD_DLL;WB_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -147,6 +142,16 @@
       <Command>IF EXIST ..\bin\Dist-windows-x86_64\Wildebeast\Wildebeast.dll\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\Wildebeast\Wildebeast.dll "..\bin\Dist-windows-x86_64\Game\" &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\Wildebeast\Wildebeast.dll "..\bin\Dist-windows-x86_64\Game\" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="src\wb.h" />
+    <ClInclude Include="src\wb\application.h" />
+    <ClInclude Include="src\wb\core.h" />
+    <ClInclude Include="src\wb\log.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\wb\application.cpp" />
+    <ClCompile Include="src\wb\log.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

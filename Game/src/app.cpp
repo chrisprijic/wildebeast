@@ -3,7 +3,7 @@
 class SandboxApp : public wb::Application {
 public:
 	SandboxApp() {
-
+		
 	}
 
 	~SandboxApp() {
@@ -12,6 +12,9 @@ public:
 };
 
 void main() {
+	wb::Log::Init();
+	WB_INFO("Application Starting...");
+
 	SandboxApp* app = new SandboxApp();
 
 	app->run();

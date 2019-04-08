@@ -13,6 +13,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include dirs relative to root (solution)
 IncludeDir = {}
+IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
 
 project "Wildebeast"
     location "Wildebeast"
@@ -31,6 +32,12 @@ project "Wildebeast"
         "%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
     }
+
+	includedirs
+	{
+		"%{prj.name}/src",
+		"%{IncludeDir.spdlog}"
+	}
 
     links
     {
@@ -85,7 +92,8 @@ project "Game"
     includedirs
     {
         "Wildebeast/src",
-        "Wildebeast/vendor"
+        "Wildebeast/vendor",
+		"%{IncludeDir.spdlog}"
     }
 
     links

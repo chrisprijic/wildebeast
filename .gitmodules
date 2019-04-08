@@ -1,0 +1,3 @@
+[submodule "Wildebeast\\vendor\\spdlog"]
+	path = Wildebeast\\vendor\\spdlog
+	url = https://github.com/gabime/spdlog
