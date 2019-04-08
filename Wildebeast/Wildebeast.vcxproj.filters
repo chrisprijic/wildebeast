@@ -16,6 +16,7 @@
     <ClInclude Include="src\wb\log.h">
       <Filter>wb</Filter>
     </ClInclude>
+    <ClInclude Include="src\wbpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\wb\application.cpp">
@@ -24,5 +25,6 @@
     <ClCompile Include="src\wb\log.cpp">
       <Filter>wb</Filter>
     </ClCompile>
+    <ClCompile Include="src\wbpch.cpp" />
   </ItemGroup>
 </Project>

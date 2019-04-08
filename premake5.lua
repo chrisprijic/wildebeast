@@ -24,8 +24,8 @@ project "Wildebeast"
     targetdir ("bin/"..outputdir.."/%{prj.name}")
     objdir ("bin-int/"..outputdir.."/{prj.name}")
 
-   -- pchheader "wbpch.h"
-    --pchsource "Wildebeast/src/wbpch.cpp"
+    pchheader "wbpch.h"
+    pchsource "Wildebeast/src/wbpch.cpp"
 
     files 
     {
