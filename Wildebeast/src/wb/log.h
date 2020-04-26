@@ -6,7 +6,7 @@
 
 namespace wb {
 
-	class WB_API Log {
+	class Log {
 	public:
 		static void Init();
 

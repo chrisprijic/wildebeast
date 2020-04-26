@@ -1,5 +1,5 @@
 workspace "Wildebeast"
-    architecture "x64"
+    architecture "x86_64"
     startproject "Game"
 
     configurations
@@ -9,6 +9,11 @@ workspace "Wildebeast"
         "Dist"
     }
 
+    flags
+	{
+		"MultiProcessorCompile"
+	}
+
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include dirs relative to root (solution)
@@ -16,16 +21,19 @@ IncludeDir = {}
 IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
 IncludeDir["GLFW"] = "Wildebeast/vendor/GLFW/include"
 
-include "Wildebeast/vendor/GLFW"
+group "Dependencies"
+    include "Wildebeast/vendor/GLFW"
+    
+group ""
 
 project "Wildebeast"
     location "Wildebeast"
-    kind "SharedLib"
+    kind "StaticLib"
     language "C++"
-    staticruntime "off"
+    staticruntime "on"
 
     targetdir ("bin/"..outputdir.."/%{prj.name}")
-    objdir ("bin-int/"..outputdir.."/{prj.name}")
+    objdir ("bin-int/"..outputdir.."/%{prj.name}")
 
     pchheader "wbpch.h"
     pchsource "Wildebeast/src/wbpch.cpp"
@@ -36,10 +44,17 @@ project "Wildebeast"
 		"%{prj.name}/src/**.cpp",
     }
 
+    defines
+	{
+		"_CRT_SECURE_NO_WARNINGS",
+		"GLFW_INCLUDE_NONE"
+	}
+
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{IncludeDir.spdlog}"
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.GLFW}"
 	}
 
     links
@@ -51,17 +66,6 @@ project "Wildebeast"
     filter "system:windows"
         cppdialect "C++17"
         systemversion "latest"
-
-        defines
-        {
-            "WB_PLATFORM_WINDOWS",
-            "WB_BUILD_DLL"
-        }
-
-        postbuildcommands
-        {
-            ("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Game/\"")
-        }
 
     filter "configurations:Debug"
         defines "WB_DEBUG"
@@ -82,7 +86,7 @@ project "Game"
     location "Game"
     kind "ConsoleApp"
     language "C++"
-    staticruntime "off"
+    staticruntime "on"
 
     targetdir ("bin/"..outputdir.."/%{prj.name}")
     objdir ("bin-int/"..outputdir.."/%{prj.name}")
@@ -108,11 +112,6 @@ project "Game"
     filter "system:windows"
 		cppdialect "C++17"
 		systemversion "latest"
-
-		defines
-		{
-			"WB_PLATFORM_WINDOWS"
-		}
 
 	filter "configurations:Debug"
 		defines "WB_DEBUG"

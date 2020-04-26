@@ -20,7 +20,7 @@ namespace wb {
 	};
 
 	// Interface representing a desktop system based Window
-	class WB_API Window {
+	class Window {
 	public:
 		using EventCallbackFn = std::function<void()>;
 

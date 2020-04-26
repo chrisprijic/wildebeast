@@ -3,12 +3,12 @@
 #include "core.h"
 
 namespace wb {
-	class WB_API Application {
-	public:
-		Application();
-		virtual ~Application();
+	class Application {
+		public:
+			Application();
+			virtual ~Application();
 
-		void run();
+			void run();
 	};
 }
 
