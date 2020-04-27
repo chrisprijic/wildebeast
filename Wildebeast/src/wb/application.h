@@ -2,6 +2,7 @@
 
 #include "wb/core.h"
 #include "wb/window.h"
+#include "wb/graphics_context.h"
 
 namespace wb {
 	class Application {
@@ -16,6 +17,7 @@ namespace wb {
 		private:
 			bool isRunning = true;
 			Window* window;
+			GraphicsContext* graphicsContext;
 	};
 }
 
