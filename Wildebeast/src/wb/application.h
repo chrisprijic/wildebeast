@@ -11,6 +11,7 @@ namespace wb {
 
 			void Run();
 		private:
+			// TODO(Chris): generalize this to window event handling
 			void OnWindowClose();
 		private:
 			bool isRunning = true;

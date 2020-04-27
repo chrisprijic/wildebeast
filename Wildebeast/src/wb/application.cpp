@@ -1,7 +1,6 @@
 #include "wbpch.h"
 
 #include "application.h"
-#include <GLFW/glfw3.h>
 
 namespace wb {
 	Application::Application()
@@ -21,7 +20,6 @@ namespace wb {
 
 	void Application::Run() {
 		while (isRunning) {
-			float time = (float)glfwGetTime();
 			window->OnUpdate();
 		}
 	}
