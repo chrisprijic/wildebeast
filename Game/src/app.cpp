@@ -16,6 +16,6 @@ void main() {
 
 	SandboxApp* app = new SandboxApp();
 
-	app->run();
+	app->Run();
 	WB_INFO("Application Complete...");
 }

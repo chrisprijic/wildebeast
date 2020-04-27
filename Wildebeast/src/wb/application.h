@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core.h"
+#include "wb/core.h"
+#include "wb/window.h"
 
 namespace wb {
 	class Application {
@@ -8,7 +9,12 @@ namespace wb {
 			Application();
 			virtual ~Application();
 
-			void run();
+			void Run();
+		private:
+			void OnWindowClose();
+		private:
+			bool isRunning = true;
+			Window* window;
 	};
 }
 

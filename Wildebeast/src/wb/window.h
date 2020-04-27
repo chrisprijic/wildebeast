@@ -1,17 +1,16 @@
 #pragma once
 
 #include "wbpch.h"
-
-#include "core.h"
+#include "wb/core.h"
 
 namespace wb {
 
-	struct WindowProps {
+	struct WindowCtx {
 		std::string Title;
 		unsigned int Width;
 		unsigned int Height;
 
-		WindowProps(const std::string& title = "Hazel Engine",
+		WindowCtx(const std::string& title = "Wildebeast Engine",
 			unsigned int width = 1280,
 			unsigned int height = 720)
 			: Title(title), Width(width), Height(height)
@@ -38,7 +37,7 @@ namespace wb {
 
 		virtual void* GetNativeWindow() const = 0;
 
-		static Window* Create(const WindowProps& props = WindowProps());
+		static Window* Create(const WindowCtx& props = WindowCtx());
 	};
 
 }

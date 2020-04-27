@@ -1,20 +1,13 @@
 #include "wbpch.h"
 
 #include "application.h"
-
-#ifdef WB_PLATFORM_WINDOWS
-	#include "platform/windows/windows_window.h"
-#endif
+#include <GLFW/glfw3.h>
 
 namespace wb {
 	Application::Application()
 	{
-#ifdef WB_PLATFORM_WINDOWS
-		WindowsWindow* window = new WindowsWindow();
-		while (window->IsOpen()) {
-			window->OnUpdate();
-		}
-#endif
+		window = Window::Create();
+		window->SetEventCallback(std::bind(&Application::OnWindowClose, this));
 	}
 
 
@@ -22,7 +15,14 @@ namespace wb {
 	{
 	}
 
-	void Application::run() {
-		// while(true);
+	void Application::OnWindowClose() {
+		isRunning = false;
+	}
+
+	void Application::Run() {
+		while (isRunning) {
+			float time = (float)glfwGetTime();
+			window->OnUpdate();
+		}
 	}
 }
