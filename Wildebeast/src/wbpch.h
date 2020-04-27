@@ -6,5 +6,5 @@
 #include "wb/log.h"
 
 #ifdef WB_PLATFORM_WINDOWS
-	#include <Windows.h>
+	#include "platform/windows/windows_platform.h"
 #endif

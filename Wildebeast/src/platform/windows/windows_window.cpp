@@ -2,57 +2,125 @@
 #include "platform/windows/windows_window.h"
 
 namespace wb {
-	static void GLFWErrorCallback(int error, const char* description)
-	{
-		WB_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
+	bool WindowsWindow::_wbWindowClassRegistered = false;
+
+	WCHAR* createWideStringFromUTF8(std::string str) {
+		if(str.empty()) return L"";
+		const char* source = str.c_str();
+		WCHAR* target;
+
+		int count = MultiByteToWideChar(CP_UTF8, 0, source, -1, NULL, 0);
+		if (!count)
+		{
+			WB_CORE_ERROR("Win32: Failed to convert string from UTF-8");
+			return NULL;
+		}
+		target = (WCHAR*)calloc(count, sizeof(WCHAR));
+
+		if (!MultiByteToWideChar(CP_UTF8, 0, source, -1, target, count)) {
+			WB_CORE_ERROR("Win32: Failed to convert string from UTF-8");
+
+			free(target);
+			return NULL;
+		}
+
+		return target;
 	}
 
 	WindowsWindow::WindowsWindow(const WindowCtx& ctx) {
-		Init(ctx);
+		init(ctx);
 	}
 
 	WindowsWindow::~WindowsWindow() {
-		Shutdown();
+		shutdown();
 	}
 
-	void WindowsWindow::Init(const WindowCtx& ctx) {
+	void WindowsWindow::init(const WindowCtx& ctx) {
 		windowCtx.Title = ctx.Title;
 		windowCtx.Width = ctx.Width;
 		windowCtx.Height = ctx.Height;
 
-		int success = glfwInit();
-		glfwSetErrorCallback(GLFWErrorCallback);
+		if (registerWindow()) {
 
-		window = glfwCreateWindow((int)windowCtx.Width, (int)windowCtx.Height, windowCtx.Title.c_str(), nullptr, nullptr);
+			window = CreateWindowExW(
+				WS_EX_APPWINDOW,
+				_WB_WNDCLASSNAME, 
+				createWideStringFromUTF8(windowCtx.Title),
+				WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+				CW_USEDEFAULT,
+				CW_USEDEFAULT,
+				windowCtx.Width, 
+				windowCtx.Height, 
+				NULL, 
+				NULL, 
+				GetModuleHandleW(NULL), 
+				NULL
+			);
 
-		glfwSetWindowUserPointer(window, &windowCtx);
-		SetVSync(true);
+			if (!window) {
+				WB_CORE_ERROR("Win32: Failed to instantiate window class [WINDOWS ERROR CODE: ({0})]", GetLastError());
+			}
 
-		glfwSetWindowCloseCallback(window, [](GLFWwindow* window) {
-			LocalWindowCtx& ctx = *(LocalWindowCtx*)glfwGetWindowUserPointer(window);
-			ctx.EventCallback();
-		});
+			SetPropW(window, L"WB_WINDOW", this);
+
+			ShowWindow(window, SW_SHOW);
+		}
 	}
 
-	void WindowsWindow::Shutdown() {
-		glfwDestroyWindow(window);
-		glfwTerminate();
+	bool WindowsWindow::registerWindow() {
+		if (_wbWindowClassRegistered) {
+			return true;
+		}
+
+		_wbWindowClassRegistered = true;
+
+		WNDCLASSEXW wc;
+
+		ZeroMemory(&wc, sizeof(wc));
+		
+		wc.cbSize = sizeof(wc);
+		wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+		wc.lpfnWndProc = (WNDPROC)WindowsWindow::windowProc;
+		wc.hInstance = GetModuleHandleW(NULL);
+		wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
+		wc.lpszClassName = _WB_WNDCLASSNAME;
+
+		if (!RegisterClassExW(&wc)) {
+			WB_CORE_ERROR("Win32: Failed to register window class [WINDOWS ERROR CODE: ({0})]", GetLastError());
+			return false;
+		}
+
+		return true;
+	}
+
+	LRESULT CALLBACK WindowsWindow::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+		WindowsWindow* window = (WindowsWindow*)GetPropW(hWnd, L"WB_WINDOW");
+		if (window) {
+			switch (uMsg) {
+				case WM_CLOSE: {
+					window->windowCtx.EventCallback();
+				} break;
+			}
+		}
+
+		return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+	}
+
+	void WindowsWindow::shutdown() {
+		DestroyWindow(window);
 	}
 
 	void WindowsWindow::OnUpdate() {
-		glfwPollEvents();
-		glfwSwapBuffers(window);
+		MSG msg;
+
+		while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 
 	void WindowsWindow::SetVSync(bool enabled) {
 		// TODO(Chris): enable once we have OpenGL
-		/*if (enabled) {
-			glfwSwapInterval(1);
-		}
-		else {
-			glfwSwapInterval(0);
-		}*/
-
 		windowCtx.VSync = enabled;
 	}
 

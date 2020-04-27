@@ -19,10 +19,6 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include dirs relative to root (solution)
 IncludeDir = {}
 IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
-IncludeDir["GLFW"] = "Wildebeast/vendor/GLFW/include"
-
-group "Dependencies"
-    include "Wildebeast/vendor/GLFW"
     
 group ""
 
@@ -46,20 +42,17 @@ project "Wildebeast"
 
     defines
 	{
-		"_CRT_SECURE_NO_WARNINGS",
-		"GLFW_INCLUDE_NONE"
+		"_CRT_SECURE_NO_WARNINGS"
 	}
 
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{IncludeDir.spdlog}",
-		"%{IncludeDir.GLFW}"
-	}
+        "%{IncludeDir.spdlog}"	
+    }
 
     links
     {
-		"GLFW",
 		"opengl32.lib"
     }
 
