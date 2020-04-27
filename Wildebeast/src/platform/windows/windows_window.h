@@ -1,7 +1,6 @@
 #pragma once
 
 #include "wb/window.h"
-#include <GLFW/glfw3.h>
 
 namespace wb {
 	class WindowsWindow : public Window {
@@ -20,10 +19,14 @@ namespace wb {
 
 			virtual void* GetNativeWindow() const { return window; }
 		private:
-			virtual void Init(const WindowCtx& ctx);
-			virtual void Shutdown();
+			virtual void init(const WindowCtx& ctx);
+			virtual void shutdown();
+
+			virtual bool registerWindow();
+
+			static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		private:
-			GLFWwindow* window;
+			HWND window;
 			struct LocalWindowCtx {
 				std::string Title;
 				unsigned int Width, Height;
@@ -33,6 +36,8 @@ namespace wb {
 			};
 
 			LocalWindowCtx windowCtx;
+
+			static bool _wbWindowClassRegistered;
 	};
 
 }
