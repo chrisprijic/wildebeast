@@ -27,6 +27,9 @@ namespace wb {
 			static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		private:
 			HWND window;
+			HDC hdc;
+			HGLRC hrc;
+
 			struct LocalWindowCtx {
 				std::string Title;
 				unsigned int Width, Height;

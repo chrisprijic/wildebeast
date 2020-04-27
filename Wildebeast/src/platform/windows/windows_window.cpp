@@ -1,6 +1,8 @@
 #include "wbpch.h"
 #include "platform/windows/windows_window.h"
 
+#include <glad/glad.h>
+
 namespace wb {
 	bool WindowsWindow::_wbWindowClassRegistered = false;
 
@@ -59,6 +61,40 @@ namespace wb {
 
 			if (!window) {
 				WB_CORE_ERROR("Win32: Failed to instantiate window class [WINDOWS ERROR CODE: ({0})]", GetLastError());
+				return;
+			}
+
+			// setup opengl
+			hdc = GetDC(window);
+
+			PIXELFORMATDESCRIPTOR pfd;
+			ZeroMemory(&pfd, sizeof(pfd));
+
+			pfd.nSize = sizeof(pfd);
+			pfd.nVersion = 1;
+			pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+			pfd.iPixelType = PFD_TYPE_RGBA;
+			pfd.cColorBits = 32;
+
+			int pf = ChoosePixelFormat(hdc, &pfd);
+			if (!pf) {
+				WB_CORE_ERROR("Win32: Error defining pixel format for drawing context");
+				return;
+			}
+
+			if (!SetPixelFormat(hdc, pf, &pfd)) {
+				WB_CORE_ERROR("Win32: Error setting desired pixel format");
+				return;
+			}
+
+			DescribePixelFormat(hdc, pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+
+			hrc = wglCreateContext(hdc);
+			wglMakeCurrent(hdc, hrc);
+
+			int status = gladLoadGL();
+			if (!status) {
+				WB_CORE_ERROR("OpenGL: (Glad) Failed to load OpenGL Context");
 			}
 
 			SetPropW(window, L"WB_WINDOW", this);
@@ -107,6 +143,8 @@ namespace wb {
 	}
 
 	void WindowsWindow::shutdown() {
+		ReleaseDC(window, hdc);
+		wglDeleteContext(hrc);
 		DestroyWindow(window);
 	}
 
@@ -117,6 +155,10 @@ namespace wb {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		SwapBuffers(hdc);
 	}
 
 	void WindowsWindow::SetVSync(bool enabled) {
