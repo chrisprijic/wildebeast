@@ -59,6 +59,7 @@ namespace wb {
 
 			if (!window) {
 				WB_CORE_ERROR("Win32: Failed to instantiate window class [WINDOWS ERROR CODE: ({0})]", GetLastError());
+				return;
 			}
 
 			SetPropW(window, L"WB_WINDOW", this);

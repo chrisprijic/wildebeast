@@ -19,7 +19,11 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include dirs relative to root (solution)
 IncludeDir = {}
 IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
-    
+IncludeDir["Glad"] = "Wildebeast/vendor/Glad/include"
+
+group "Dependencies"
+    include "Wildebeast/vendor/Glad"
+
 group ""
 
 project "Wildebeast"
@@ -48,11 +52,13 @@ project "Wildebeast"
 	includedirs
 	{
 		"%{prj.name}/src",
-        "%{IncludeDir.spdlog}"	
+        "%{IncludeDir.spdlog}",	
+        "%{IncludeDir.Glad}"	
     }
 
     links
     {
+        "Glad",
 		"opengl32.lib"
     }
 
