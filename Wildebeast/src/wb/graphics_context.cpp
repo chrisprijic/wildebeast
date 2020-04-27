@@ -11,5 +11,6 @@ namespace wb {
 			default:
 				WB_CORE_ERROR("Graphics Context is not supported!");
 		}
+		return nullptr;
 	}
 }
