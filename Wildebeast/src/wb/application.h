@@ -1,14 +1,21 @@
 #pragma once
 
-#include "core.h"
+#include "wb/core.h"
+#include "wb/window.h"
 
 namespace wb {
-	class WB_API Application {
-	public:
-		Application();
-		virtual ~Application();
+	class Application {
+		public:
+			Application();
+			virtual ~Application();
 
-		void run();
+			void Run();
+		private:
+			// TODO(Chris): generalize this to window event handling
+			void OnWindowClose();
+		private:
+			bool isRunning = true;
+			Window* window;
 	};
 }
 

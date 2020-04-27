@@ -2,10 +2,11 @@
 
 #include "application.h"
 
-
 namespace wb {
 	Application::Application()
 	{
+		window = Window::Create();
+		window->SetEventCallback(std::bind(&Application::OnWindowClose, this));
 	}
 
 
@@ -13,7 +14,13 @@ namespace wb {
 	{
 	}
 
-	void Application::run() {
-		while (true);
+	void Application::OnWindowClose() {
+		isRunning = false;
+	}
+
+	void Application::Run() {
+		while (isRunning) {
+			window->OnUpdate();
+		}
 	}
 }

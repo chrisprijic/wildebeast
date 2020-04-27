@@ -1,22 +1,14 @@
 #pragma once
 
-// On Windows, handle DLL import/export
-#ifdef WB_PLATFORM_WINDOWS
-
-	// if building DLL (on build of Engine), export DLL decls
-	#ifdef WB_BUILD_DLL
-
-		#define WB_API __declspec(dllexport)
-
-	// otherwise the headers are imported, so import DLL decls
+#ifdef _WIN32
+	/* Windows x64/x86 */
+	#ifdef _WIN64
+		/* Windows x64  */
+	#define WB_PLATFORM_WINDOWS
 	#else
-
-		#define WB_API __declspec(dllimport)
-
+		/* Windows x86 */
+	#error "x86 Builds are not supported!"
 	#endif
-
 #else
-
-	#error "Wildebeast onyl supports Windows atm..."
-
+	#error "Unsupported platform!"
 #endif
