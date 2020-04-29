@@ -10,14 +10,14 @@ namespace wb {
 			
 			void OnUpdate() override;
 
-			unsigned int GetWidth() const override { return windowCtx.Width; }
-			unsigned int GetHeight() const override { return windowCtx.Height; }
+			u32 GetWidth() const override { return windowCtx.Width; }
+			u32 GetHeight() const override { return windowCtx.Height; }
 
 			void SetEventCallback(const EventCallbackFn& callback) override { windowCtx.EventCallback = callback; }
 			void SetVSync(bool enabled) override;
 			bool IsVSync() const override;
 
-			virtual void* GetNativeWindow() const { return window; }
+			virtual pvoid GetNativeWindow() const { return window; }
 		private:
 			virtual void init(const WindowCtx& ctx);
 			virtual void shutdown();
@@ -31,8 +31,8 @@ namespace wb {
 			HGLRC hrc;
 
 			struct LocalWindowCtx {
-				std::string Title;
-				unsigned int Width, Height;
+				str Title;
+				u32 Width, Height;
 				bool VSync;
 
 				EventCallbackFn EventCallback;

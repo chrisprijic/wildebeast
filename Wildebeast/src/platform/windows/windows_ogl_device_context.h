@@ -1,13 +1,13 @@
 #pragma once
 
 #include "platform/windows/windows_window.h"
-#include "platform/opengl/opengl_graphics_context.h"
+#include "platform/opengl/ogl_device_context.h"
 
 namespace wb {
-	class WindowsOpenGLContext : public OpenGLGraphicsContext {
+	class WindowsOGLDeviceContext : public OGLDeviceContext {
 		public:
-			WindowsOpenGLContext(WindowsWindow* window);
-			~WindowsOpenGLContext();
+			WindowsOGLDeviceContext(WindowsWindow* window);
+			~WindowsOGLDeviceContext();
 			void Init();
 			void SwapBuffers();
 			void MakeCurrent();

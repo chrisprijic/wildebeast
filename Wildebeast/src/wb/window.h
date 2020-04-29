@@ -6,13 +6,13 @@
 namespace wb {
 
 	struct WindowCtx {
-		std::string Title;
-		unsigned int Width;
-		unsigned int Height;
+		str Title;
+		u32 Width;
+		u32 Height;
 
-		WindowCtx(const std::string& title = "Wildebeast Engine",
-			unsigned int width = 1280,
-			unsigned int height = 720)
+		WindowCtx(const str& title = "Wildebeast Engine",
+			u32 width = 1280,
+			u32 height = 720)
 			: Title(title), Width(width), Height(height)
 		{
 		}
@@ -27,8 +27,8 @@ namespace wb {
 
 		virtual void OnUpdate() = 0;
 
-		virtual unsigned int GetWidth() const = 0;
-		virtual unsigned int GetHeight() const = 0;
+		virtual u32 GetWidth() const = 0;
+		virtual u32 GetHeight() const = 0;
 
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
