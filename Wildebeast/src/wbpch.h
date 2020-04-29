@@ -3,6 +3,7 @@
 #include <memory>
 #include <functional>
 
+#include "wb/types.h"
 #include "wb/log.h"
 
 #ifdef WB_PLATFORM_WINDOWS
