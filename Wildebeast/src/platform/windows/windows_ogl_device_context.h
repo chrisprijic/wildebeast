@@ -15,6 +15,9 @@ namespace wb {
 			HDC hdc;
 			HGLRC hrc;
 			HWND window;
+
+			i32 glMaj;
+			i32 glMin;
 	};
 }
 
