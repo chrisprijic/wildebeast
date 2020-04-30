@@ -5,14 +5,15 @@
 namespace wb {
 
 	enum DEVICE_CONTEXT_TYPE {
-		WB_DC_NONE   = 0,
-		WB_DC_OPENGL = 1
+		WB_DEVICECONTEXT_NONE   = 0,
+		WB_DEVICECONTEXT_OPENGL = 1
 	};
 
 	class DeviceContext
 	{
 	public:
 		virtual void Init() = 0;
+		virtual void SetVSync(bool enabled) = 0;
 		virtual void SwapBuffers() = 0;
 		virtual void MakeCurrent() = 0;
 

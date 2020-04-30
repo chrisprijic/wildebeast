@@ -14,8 +14,6 @@ namespace wb {
 			u32 GetHeight() const override { return windowCtx.Height; }
 
 			void SetEventCallback(const EventCallbackFn& callback) override { windowCtx.EventCallback = callback; }
-			void SetVSync(bool enabled) override;
-			bool IsVSync() const override;
 
 			virtual pvoid GetNativeWindow() const { return window; }
 		private:

@@ -9,6 +9,7 @@ namespace wb {
 			WindowsOGLDeviceContext(WindowsWindow* window);
 			~WindowsOGLDeviceContext();
 			void Init();
+			void SetVSync(bool enabled);
 			void SwapBuffers();
 			void MakeCurrent();
 		private:

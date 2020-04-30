@@ -5,7 +5,7 @@
 namespace wb {
 	DeviceContext* DeviceContext::Create(DEVICE_CONTEXT_TYPE type, Window* window) {
 		switch (type) {
-			case WB_DC_OPENGL: {
+			case WB_DEVICECONTEXT_OPENGL: {
 				return OGLDeviceContext::Create(window);
 			} break;
 			default:
