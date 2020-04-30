@@ -119,13 +119,4 @@ namespace wb {
 			DispatchMessage(&msg);
 		}
 	}
-
-	void WindowsWindow::SetVSync(bool enabled) {
-		// TODO(Chris): enable once we have OpenGL
-		windowCtx.VSync = enabled;
-	}
-
-	bool WindowsWindow::IsVSync() const {
-		return windowCtx.VSync;
-	}
 }

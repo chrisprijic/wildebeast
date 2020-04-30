@@ -89,6 +89,13 @@ namespace wb {
 		WB_CORE_INFO("Initialized OpenGL {0}.{1}", glMaj, glMin);
 	}
 
+	void WindowsOGLDeviceContext::SetVSync(bool enabled) {
+		if (wglSwapIntervalEXT != nullptr)
+		{
+			wglSwapIntervalEXT(enabled ? 1 : 0);
+		}
+	}
+
 	void WindowsOGLDeviceContext::SwapBuffers() {
 		//TODO(Chris): move the clear color calls out into the Renderer API once we make it.
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);

@@ -7,8 +7,9 @@ namespace wb {
 	{
 		window = Window::Create();
 		window->SetEventCallback(std::bind(&Application::OnWindowClose, this));
-		graphicsContext = DeviceContext::Create(WB_DC_OPENGL, window);
+		graphicsContext = DeviceContext::Create(WB_DEVICECONTEXT_OPENGL, window);
 		graphicsContext->Init();
+		graphicsContext->SetVSync(true);
 	}
 
 
