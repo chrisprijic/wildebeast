@@ -8,6 +8,9 @@ namespace wb {
 	WindowsOGLDeviceContext::WindowsOGLDeviceContext(WindowsWindow* win) {
 		window = (HWND)win->GetNativeWindow();
 		hdc = GetDC(window);
+		hrc = NULL;
+		glMaj = 0;
+		glMin = 0;
 	}
 
 	WindowsOGLDeviceContext::~WindowsOGLDeviceContext() {
@@ -49,14 +52,14 @@ namespace wb {
 
 		if (wglewIsSupported("WGL_ARB_create_context") == 1) {
 			std::pair<i32, i32> gl_versions[] = { {4, 6}, {4, 5}, {4, 4}, {4, 3}, {4, 2} };
-			for (size i = 0; i < _countof(gl_versions) && hrc != NULL; i++) {
+			for (size i = 0; i < _countof(gl_versions) && hrc == NULL; i++) {
 				const auto& version = gl_versions[i];
-				i32 maj = version.first;
-				i32 min = version.second;
+				glMaj = version.first;
+				glMin = version.second;
 
 				i32 attribs[] = {
-					WGL_CONTEXT_MAJOR_VERSION_ARB, maj,
-					WGL_CONTEXT_MINOR_VERSION_ARB, min,
+					WGL_CONTEXT_MAJOR_VERSION_ARB, glMaj,
+					WGL_CONTEXT_MINOR_VERSION_ARB, glMin,
 					WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 						GL_CONTEXT_PROFILE_MASK, GL_CONTEXT_CORE_PROFILE_BIT,
 						0, 0
@@ -76,6 +79,14 @@ namespace wb {
 
 		wglMakeCurrent(hdc, hrc);
 		wglSwapIntervalEXT(0);
+
+		// get GL info
+		const GLubyte* glVersionString = glGetString(GL_VERSION);
+
+		glGetIntegerv(GL_MAJOR_VERSION, &glMaj);
+		glGetIntegerv(GL_MINOR_VERSION, &glMin);
+
+		WB_CORE_INFO("Initialized OpenGL {0}.{1}", glMaj, glMin);
 	}
 
 	void WindowsOGLDeviceContext::SwapBuffers() {
