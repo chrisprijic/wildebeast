@@ -19,10 +19,10 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include dirs relative to root (solution)
 IncludeDir = {}
 IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
-IncludeDir["Glad"] = "Wildebeast/vendor/Glad/include"
+IncludeDir["GLEW"] = "Wildebeast/vendor/GLEW/include"
 
 group "Dependencies"
-    include "Wildebeast/vendor/Glad"
+    include "Wildebeast/vendor/GLEW"
 
 group ""
 
@@ -41,24 +41,26 @@ project "Wildebeast"
     files 
     {
         "%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.cpp"
     }
 
     defines
 	{
-		"_CRT_SECURE_NO_WARNINGS"
+        "_CRT_SECURE_NO_WARNINGS",
+        "GLEW_STATIC",
+        "GLEW_NO_GLU"
 	}
 
 	includedirs
 	{
 		"%{prj.name}/src",
         "%{IncludeDir.spdlog}",	
-        "%{IncludeDir.Glad}"	
+        "%{IncludeDir.GLEW}"	
     }
 
     links
     {
-        "Glad",
+        "GLEW",
 		"opengl32.lib"
     }
 
