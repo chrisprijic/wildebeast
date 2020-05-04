@@ -18,7 +18,7 @@
 #define WB_ASSERT_SOURCE_INFO(condition, msg) {__FILE__, __LINE__, condition, msg}
 #define WB_ASSERT_IMPL_VAR(arg) .Variable(WB_TO_STRING(arg), arg)
 #define WB_ASSERT_IMPL_VARS(...) WB_FOR_EACH_VA(WB_ASSERT_IMPL_VAR, __VA_ARGS__), WB_BREAKPOINT())
-#define WB_ASSERT(condition, msg) SourceInfo info = WB_ASSERT_SOURCE_INFO(WB_TO_STRING(condition), msg); (condition) ? WB_NOFUNCTION() : (Assert(info) WB_ASSERT_IMPL_VARS
+#define WB_ASSERT(condition, msg) (condition) ? WB_NOFUNCTION() : (Assert(WB_ASSERT_SOURCE_INFO(WB_TO_STRING(condition), msg)) WB_ASSERT_IMPL_VARS
 
 #else
 // define these to be empty when not debugging

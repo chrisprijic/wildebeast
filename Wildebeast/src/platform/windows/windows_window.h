@@ -17,7 +17,7 @@ namespace wb {
 
             virtual pvoid GetNativeWindow() const { return window; }
         private:
-            virtual void init(const WindowCtx& ctx);
+            virtual bool init(const WindowCtx& ctx);
             virtual void shutdown();
 
             virtual bool registerWindow();
@@ -27,6 +27,7 @@ namespace wb {
             HWND window;
             HDC hdc;
             HGLRC hrc;
+            bool isWindowCreated;
 
             struct LocalWindowCtx {
                 str Title;

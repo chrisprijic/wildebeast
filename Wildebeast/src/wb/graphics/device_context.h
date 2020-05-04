@@ -12,7 +12,7 @@ namespace wb {
     class DeviceContext
     {
     public:
-        virtual void Init() = 0;
+        virtual bool Init() = 0;
         virtual void SetVSync(bool enabled) = 0;
         virtual void SwapBuffers() = 0;
         virtual void MakeCurrent() = 0;

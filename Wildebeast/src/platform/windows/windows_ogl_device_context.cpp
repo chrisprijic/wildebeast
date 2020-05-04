@@ -18,7 +18,7 @@ namespace wb {
         wglDeleteContext(hrc);
     }
 
-    void WindowsOGLDeviceContext::Init() {
+    bool WindowsOGLDeviceContext::Init() {
         PIXELFORMATDESCRIPTOR pfd;
         ZeroMemory(&pfd, sizeof(pfd));
 
@@ -29,14 +29,19 @@ namespace wb {
         pfd.cColorBits = 32;
 
         i32 pf = ChoosePixelFormat(hdc, &pfd);
+
+        WB_ASSERT(pf, "Win32: Error defining pixel format for drawing context")(pf);
         if (!pf) {
             WB_CORE_ERROR("Win32: Error defining pixel format for drawing context");
-            return;
+            return false;
         }
 
-        if (!SetPixelFormat(hdc, pf, &pfd)) {
+        bool pixelFormatSet = SetPixelFormat(hdc, pf, &pfd);
+
+        WB_ASSERT(pixelFormatSet, "Win32: Error setting desired pixel format")(pf, (void*)&pfd, GetLastError());
+        if (!pixelFormatSet) {
             WB_CORE_ERROR("Win32: Error setting desired pixel format");
-            return;
+            return false;
         }
 
         DescribePixelFormat(hdc, pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
@@ -47,7 +52,7 @@ namespace wb {
         GLenum err = glewInit();
         if (GLEW_OK != err) {
             WB_CORE_ERROR("OpenGL: (GLEW) Failed to load OpenGL Context");
-            return;
+            return false;
         }
 
         if (wglewIsSupported("WGL_ARB_create_context") == 1) {
@@ -71,7 +76,7 @@ namespace wb {
 
         if (hrc == NULL) {
             WB_CORE_ERROR("Failed to initialize OpenGL context.");
-            return;
+            return false;
         }
 
         wglMakeCurrent(NULL, NULL);
@@ -87,6 +92,8 @@ namespace wb {
         glGetIntegerv(GL_MINOR_VERSION, &glMin);
 
         WB_CORE_INFO("Initialized OpenGL {0}.{1}", glMaj, glMin);
+
+        return true;
     }
 
     void WindowsOGLDeviceContext::SetVSync(bool enabled) {
