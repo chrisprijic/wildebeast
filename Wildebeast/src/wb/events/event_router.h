@@ -8,7 +8,7 @@ namespace wb {
         public:
             EventRouter(Event& e) : event(e) {}
 
-            using EventCallbackFn = std::function<void()>;
+            using EventCallbackFn = std::function<void(Event& e)>;
 
             template<u32 ET>
             bool ProcessEvent(const EventCallbackFn func) {
