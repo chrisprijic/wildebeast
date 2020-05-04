@@ -5,19 +5,19 @@
 #include "wb/graphics/device_context.h"
 
 namespace wb {
-	class Application {
-		public:
-			Application();
-			virtual ~Application();
+    class Application {
+        public:
+            Application();
+            virtual ~Application();
 
-			void Run();
-		private:
-			// TODO(Chris): generalize this to window event handling
-			void OnWindowClose();
-		private:
-			bool isRunning = true;
-			Window* window;
-			DeviceContext* graphicsContext;
-	};
+            void Run();
+        private:
+            // TODO(Chris): generalize this to window event handling
+            void OnWindowClose();
+        private:
+            bool isRunning = true;
+            Window* window;
+            DeviceContext* graphicsContext;
+    };
 }
 

@@ -7,5 +7,5 @@
 #include "wb/debug/log.h"
 
 #ifdef WB_PLATFORM_WINDOWS
-	#include "platform/windows/windows_platform.h"
+    #include "platform/windows/windows_platform.h"
 #endif
