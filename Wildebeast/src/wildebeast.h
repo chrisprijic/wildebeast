@@ -2,7 +2,7 @@
 
 // For use by Wildebeast Applications
 
-#include "wb/types.h"
-#include "wb/core.h"
-#include "wb/application.h"
-#include "wb/log.h"
+#include "wb/core/types.h"
+#include "wb/core/core.h"
+#include "wb/core/application.h"
+#include "wb/debug/log.h"

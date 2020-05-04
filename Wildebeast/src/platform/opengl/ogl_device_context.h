@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wb/device_context.h"
+#include "wb/graphics/device_context.h"
 
 namespace wb {
 	class OGLDeviceContext : public DeviceContext {

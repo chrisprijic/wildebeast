@@ -1,5 +1,5 @@
 #include "wbpch.h"
-#include "device_context.h"
+#include "wb/graphics/device_context.h"
 #include "platform/opengl/ogl_device_context.h"
 
 namespace wb {

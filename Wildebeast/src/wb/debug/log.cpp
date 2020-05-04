@@ -1,6 +1,6 @@
 #include "wbpch.h"
 
-#include "log.h"
+#include "wb/debug/log.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace wb {
