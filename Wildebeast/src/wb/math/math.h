@@ -1,0 +1,27 @@
+#pragma once
+
+#include "vector.h"
+#include "matrix.h"
+#include "quaternion.h"
+#include "transform.h"
+#include "interpolation.h"
+
+#define PI 3.1415926535897932385
+
+#define SQRT_2 1.4142135623730950488
+
+#define SQRT_3 1.7320508075688772935
+
+#define HALF_PI 1.570796326794896619231 // PI / 2
+
+#define DEG_TO_RAD 0.01745329251994329576924 // PI / 180.0
+
+#define RAD_TO_DEG 57.2957795130823208768 // 1.0 / DEG_TO_RAD
+
+#define INV_SQRT_2 0.7071067811865475244008 // 1.0 / SQRT_2
+
+#define INV_SQRT_3 0.5773502691896257645091 // 1.0 / SQRT_3
+
+#define INV_PI 0.3183098861837906715378 // 1.0 / PI
+
+#define INV_HALF_PI 0.6366197723675813430755 // 1.0 / HALF_PI

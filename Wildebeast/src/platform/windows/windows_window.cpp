@@ -274,14 +274,14 @@ namespace wb {
                     event.Motion.Y = y;
                 } break;
                 case WM_MOUSEWHEEL: {
-                    i32 yDelta = (SHORT)HIWORD(wParam) / (double)WHEEL_DELTA;
+                    i32 yDelta = (i32)((SHORT)HIWORD(wParam) / (double)WHEEL_DELTA);
 
                     event.Type = WB_EVENT_MOUSE_SCROLLED;
                     event.Scroll.X = 0;
                     event.Scroll.Y = yDelta;
                 } break;
                 case WM_MOUSEHWHEEL: {
-                    i32 xDelta = (SHORT)HIWORD(wParam) / (double)WHEEL_DELTA;
+                    i32 xDelta = (i32)((SHORT)HIWORD(wParam) / (double)WHEEL_DELTA);
 
                     event.Type = WB_EVENT_MOUSE_SCROLLED;
                     event.Scroll.X = xDelta;
