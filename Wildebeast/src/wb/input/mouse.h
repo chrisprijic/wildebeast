@@ -3,26 +3,17 @@
 #include <iostream>
 
 namespace wb {
-    typedef enum WB_MOUSECODE {
-        WB_MOUSEBUTTON_0 = 0,
-        WB_MOUSEBUTTON_1,
-        WB_MOUSEBUTTON_2,
-        WB_MOUSEBUTTON_3,
-        WB_MOUSEBUTTON_4,
-        WB_MOUSEBUTTON_5,
-        WB_MOUSEBUTTON_6,
-        WB_MOUSEBUTTON_7,
-
-        WB_MOUSEBUTTON_LAST,
-        WB_MOUSEBUTTON_LEFT,
+    typedef enum WB_MOUSEBUTTON {
+        WB_MOUSEBUTTON_LEFT = 0,
         WB_MOUSEBUTTON_RIGHT,
         WB_MOUSEBUTTON_MIDDLE,
-
+        WB_MOUSEBUTTON_X1,
+        WB_MOUSEBUTTON_X2,
 
         WB_TOTAL_MOUSECODES
-    } WB_MOUSECODE;
+    } WB_MOUSEBUTTON;
 
-    inline std::ostream& operator<<(std::ostream& os, WB_MOUSECODE mousecode) {
+    inline std::ostream& operator<<(std::ostream& os, WB_MOUSEBUTTON mousecode) {
         os << static_cast<int32_t>(mousecode);
         return os;
     }

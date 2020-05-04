@@ -12,6 +12,7 @@ namespace wb {
 			virtual ~Application();
 
 			void Run();
+			virtual void OnEvent(Event& e);
 		private:
 			// TODO(Chris): generalize this to window event handling
 			void closeWindow();

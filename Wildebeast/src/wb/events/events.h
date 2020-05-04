@@ -1,6 +1,8 @@
 #pragma once
 
 #include "wb/events/input_events.h"
+#include "wb/input/mouse.h"
+#include "wb/input/keyboard.h"
 
 namespace wb {
 
@@ -28,6 +30,11 @@ namespace wb {
 
         WB_EVENT_TOTAL_TYPES	= 0xFFFF
     } EVENT_TYPE;
+
+    inline std::ostream& operator<<(std::ostream& os, EVENT_TYPE mousecode) {
+        os << static_cast<int32_t>(mousecode);
+        return os;
+    }
 
     typedef struct GenericEvent {
         u32 Type;
