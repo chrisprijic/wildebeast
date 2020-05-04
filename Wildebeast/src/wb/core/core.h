@@ -12,3 +12,6 @@
 #else
     #error "Unsupported platform!"
 #endif
+
+#include "wb/core/macros.h"
+#include "wb/debug/debug.h"

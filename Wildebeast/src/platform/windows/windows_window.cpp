@@ -145,14 +145,14 @@ namespace wb {
     }
 
     WindowsWindow::WindowsWindow(const WindowCtx& ctx) {
-        init(ctx);
+        isWindowCreated = init(ctx);
     }
 
     WindowsWindow::~WindowsWindow() {
         shutdown();
     }
 
-    void WindowsWindow::init(const WindowCtx& ctx) {
+    bool WindowsWindow::init(const WindowCtx& ctx) {
         windowCtx.Title = ctx.Title;
         windowCtx.Width = ctx.Width;
         windowCtx.Height = ctx.Height;
@@ -174,15 +174,20 @@ namespace wb {
                 NULL
             );
 
+            WB_ASSERT(window, "Win32: Failed to instantiate window")((void*)window, GetLastError());
             if (!window) {
-                WB_CORE_ERROR("Win32: Failed to instantiate window class [WINDOWS ERROR CODE: ({0})]", GetLastError());
-                return;
+                WB_CORE_ERROR("Win32: Failed to instantiate window");
+                return false;
             }
 
             SetPropW(window, L"WB_WINDOW", this);
 
             ShowWindow(window, SW_SHOW);
+
+            return true;
         }
+
+        return false;
     }
 
     bool WindowsWindow::registerWindow() {
@@ -203,8 +208,10 @@ namespace wb {
         wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
         wc.lpszClassName = _WB_WNDCLASSNAME;
 
-        if (!RegisterClassExW(&wc)) {
-            WB_CORE_ERROR("Win32: Failed to register window class [WINDOWS ERROR CODE: ({0})]", GetLastError());
+        bool classRegistered = RegisterClassExW(&wc);
+        WB_ASSERT(classRegistered, "Win32: Failed to register window class")((void*)&wc, GetLastError());
+        if (!classRegistered) {
+            WB_CORE_ERROR("Win32: Failed to register window class");
             return false;
         }
 
