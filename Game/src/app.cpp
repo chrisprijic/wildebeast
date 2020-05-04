@@ -24,6 +24,33 @@ void onMouseMoved(wb::Event& e) {
 	WB_TRACE("mouse moved: ({}, {})", e.Motion.X, e.Motion.Y);
 }
 
+void onWindowEvent(wb::Event& e) {
+	switch (e.Window.Event) {
+	case wb::WB_WINDOWEVENT_RESIZED: {
+		WB_TRACE("new window size: {}, {}", e.Window.Width, e.Window.Height);
+	} break;
+	case wb::WB_WINDOWEVENT_FOCUSED: {
+		WB_TRACE("window focused");
+	} break;
+	case wb::WB_WINDOWEVENT_UNFOCUSED: {
+		WB_TRACE("window unfocused");
+	} break;
+	case wb::WB_WINDOWEVENT_EXPOSED: {
+		WB_TRACE("window exposed");
+	} break;
+	case wb::WB_WINDOWEVENT_MOVED: {
+		WB_TRACE("window moved");
+	} break;
+	case wb::WB_WINDOWEVENT_MINIMIZED: {
+		WB_TRACE("window minimized");
+	} break;
+	case wb::WB_WINDOWEVENT_MAXIMIZED: {
+		WB_TRACE("window maximized");
+	} break;
+	// TODO(Chris): handle window/mouse interactions
+	}
+}
+
 class SandboxApp : public wb::Application {
 public:
 	SandboxApp() {
@@ -42,6 +69,8 @@ public:
 		router.ProcessEvent<wb::WB_EVENT_MOUSE_RELEASED>(onMouseReleased);
 		router.ProcessEvent<wb::WB_EVENT_MOUSE_SCROLLED>(onMouseScrolled);
 		router.ProcessEvent<wb::WB_EVENT_MOUSE_MOVED>(onMouseMoved);
+
+		router.ProcessEvent<wb::WB_EVENT_WINDOW_EVENT>(onWindowEvent);
 	}
 };
 
