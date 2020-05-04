@@ -218,9 +218,21 @@ namespace wb {
             Event event;
 
             switch (uMsg) {
-                case WM_CLOSE: {
+                case WM_CLOSE:
+                case WM_QUIT: {
                     event.Type = WB_EVENT_QUIT;
-                    event.Quit = QuitEvent{};
+                } break;
+                case WM_SETFOCUS: {
+                    event.Type = WB_EVENT_WINDOW_EVENT;
+                    event.Window.Event = WB_WINDOWEVENT_FOCUSED;
+                } break;
+                case WM_KILLFOCUS: {
+                    event.Type = WB_EVENT_WINDOW_EVENT;
+                    event.Window.Event = WB_WINDOWEVENT_UNFOCUSED;
+                } break;
+                case WM_ACTIVATE: {
+                    event.Type = WB_EVENT_WINDOW_EVENT;
+                    event.Window.Event = WB_WINDOWEVENT_SHOWN;
                 } break;
                 case WM_LBUTTONUP:
                 case WM_RBUTTONUP:
@@ -287,10 +299,36 @@ namespace wb {
                     event.Type = WB_EVENT_KEY_RELEASED;
                     event.Key.Code = scancode;
                 } break;
+                case WM_MOVE: {
+                    event.Type = WB_EVENT_WINDOW_EVENT;
+                    event.Window.Event = WB_WINDOWEVENT_MOVED;
+                } break;
+                case WM_SIZE: {
+                    i32 width, height;
+                    width = LOWORD(lParam);
+                    height = HIWORD(lParam);
+
+                    event.Type = WB_EVENT_WINDOW_EVENT;
+                    event.Window.Event = WB_WINDOWEVENT_RESIZED;
+                    event.Window.Width = width;
+                    event.Window.Height = height;
+
+                    if (wParam == SIZE_MINIMIZED && window->windowCtx.EventCallback != NULL) {
+                        window->windowCtx.EventCallback(event);
+                        event = Event{};
+                        event.Type = WB_EVENT_WINDOW_EVENT;
+                        event.Window.Event = WB_WINDOWEVENT_MINIMIZED;
+                    } else if (wParam == SIZE_MAXIMIZED && window->windowCtx.EventCallback != NULL) {
+                        window->windowCtx.EventCallback(event);
+                        event = Event{};
+                        event.Type = WB_EVENT_WINDOW_EVENT;
+                        event.Window.Event = WB_WINDOWEVENT_MAXIMIZED;
+                    }
+                } break;
                 default:
                     event.Type = WB_EVENT_NONE;
             }
-            if (event.Type != WB_EVENT_NONE) {
+            if (event.Type != WB_EVENT_NONE && window -> windowCtx.EventCallback != NULL) {
                 window->windowCtx.EventCallback(event);
             }
         }

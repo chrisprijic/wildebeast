@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wb/events/input_events.h"
+#include "wb/events/window_events.h"
 #include "wb/input/mouse.h"
 #include "wb/input/keyboard.h"
 
@@ -51,6 +52,8 @@ namespace wb {
 
         GenericEvent		Generic;
         QuitEvent			Quit;
+        WindowEvent         Window;
+        SysWinEvent         SysWin;
         KeyboardEvent		Key;
         MouseMoveEvent		Motion;
         MouseButtonEvent	Button;
