@@ -1,6 +1,6 @@
 #include "wbpch.h"
 
-#include "wb/application.h"
+#include "wb/core/application.h"
 
 namespace wb {
 	Application::Application()

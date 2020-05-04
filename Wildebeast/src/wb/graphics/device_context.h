@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wb/window.h"
+#include "wb/core/window.h"
 
 namespace wb {
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "wbpch.h"
-#include "wb/core.h"
+#include "wb/core/core.h"
 
 namespace wb {
 

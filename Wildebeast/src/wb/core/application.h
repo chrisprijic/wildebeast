@@ -1,8 +1,8 @@
 #pragma once
 
-#include "wb/core.h"
-#include "wb/window.h"
-#include "wb/device_context.h"
+#include "wb/core/core.h"
+#include "wb/core/window.h"
+#include "wb/graphics/device_context.h"
 
 namespace wb {
 	class Application {
