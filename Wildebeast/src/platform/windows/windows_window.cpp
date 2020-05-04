@@ -6,7 +6,8 @@ namespace wb {
     bool WindowsWindow::_wbWindowClassRegistered = false;
 
     WCHAR* createWideStringFromUTF8(std::string str) {
-        if (str.empty()) return L"";
+
+        if(str.empty()) return L"";
         const char* source = str.c_str();
         WCHAR* target;
 

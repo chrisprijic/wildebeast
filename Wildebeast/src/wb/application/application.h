@@ -6,15 +6,14 @@
 #include "wb/graphics/device_context.h"
 
 namespace wb {
-	class Application {
-		public:
-			Application();
-			virtual ~Application();
+    class Application {
+        public:
+            Application();
+            virtual ~Application();
 
 			void Run();
 			virtual void OnEvent(Event& e);
 		private:
-			// TODO(Chris): generalize this to window event handling
 			void closeWindow();
 			void onEvent(Event& e);
 		private:

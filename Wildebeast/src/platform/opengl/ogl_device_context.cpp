@@ -6,12 +6,12 @@
 #endif
 
 namespace wb {
-	DeviceContext* OGLDeviceContext::Create(Window* window) {
+    DeviceContext* OGLDeviceContext::Create(Window* window) {
 #ifdef WB_PLATFORM_WINDOWS
-		return new WindowsOGLDeviceContext((WindowsWindow*)window);
+        return new WindowsOGLDeviceContext((WindowsWindow*)window);
 #else
-		WB_CORE_ERROR("Graphics Context for OpenGL only supports WB_PLATFORM_WINDOWS");
-		return nullptr;
+        WB_CORE_ERROR("Graphics Context for OpenGL only supports WB_PLATFORM_WINDOWS");
+        return nullptr;
 #endif
-	}
+    }
 }
