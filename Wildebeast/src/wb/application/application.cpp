@@ -1,12 +1,13 @@
 #include "wbpch.h"
 
-#include "wb/core/application.h"
+#include "wb/application/application.h"
+#include "wb/events/event_router.h"
 
 namespace wb {
 	Application::Application()
 	{
 		window = Window::Create();
-		window->SetEventCallback(std::bind(&Application::OnWindowClose, this));
+		window->SetEventCallback(std::bind(&Application::onEvent, this, std::placeholders::_1));
 		graphicsContext = DeviceContext::Create(WB_DEVICECONTEXT_OPENGL, window);
 		graphicsContext->Init();
 		graphicsContext->SetVSync(true);
@@ -17,7 +18,18 @@ namespace wb {
 	{
 	}
 
-	void Application::OnWindowClose() {
+	void Application::onEvent(Event& e) {
+		switch (e.Type) {
+			case WB_EVENT_QUIT: {
+				closeWindow();
+			}break;
+			default: {
+
+			}
+		}
+	}
+
+	void Application::closeWindow() {
 		isRunning = false;
 	}
 

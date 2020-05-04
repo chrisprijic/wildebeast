@@ -1,5 +1,5 @@
 #include "wbpch.h"
-#include "wb/core/window.h"
+#include "wb/application/window.h"
 
 #ifdef WB_PLATFORM_WINDOWS
 	#include "platform/windows/windows_window.h"

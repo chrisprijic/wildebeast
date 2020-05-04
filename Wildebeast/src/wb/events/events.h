@@ -52,6 +52,6 @@ namespace wb {
         // padding to wrap size to largest alignment 
         // (4 bytes): 21 -> 24
         u8 padding[24];
-    } event;
+    } Event;
 
 }

@@ -4,5 +4,6 @@
 
 #include "wb/core/types.h"
 #include "wb/core/core.h"
-#include "wb/core/application.h"
+#include "wb/events/events.h"
+#include "wb/application/application.h"
 #include "wb/debug/log.h"

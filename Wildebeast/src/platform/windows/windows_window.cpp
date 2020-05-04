@@ -99,7 +99,10 @@ namespace wb {
 		if (window) {
 			switch (uMsg) {
 				case WM_CLOSE: {
-					window->windowCtx.EventCallback();
+					Event event;
+					event.Type = WB_EVENT_QUIT;
+					event.Quit = QuitEvent{};
+					window->windowCtx.EventCallback(event);
 				} break;
 			}
 		}

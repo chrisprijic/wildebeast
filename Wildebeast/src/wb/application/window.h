@@ -2,6 +2,7 @@
 
 #include "wbpch.h"
 #include "wb/core/core.h"
+#include "wb/events/events.h"
 
 namespace wb {
 
@@ -21,7 +22,7 @@ namespace wb {
 	// Interface representing a desktop system based Window
 	class Window {
 	public:
-		using EventCallbackFn = std::function<void()>;
+		using EventCallbackFn = std::function<void(Event&)>;
 
 		virtual ~Window() {}
 

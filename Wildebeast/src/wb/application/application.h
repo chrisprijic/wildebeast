@@ -1,7 +1,8 @@
 #pragma once
 
 #include "wb/core/core.h"
-#include "wb/core/window.h"
+#include "wb/application/window.h"
+#include "wb/events/events.h"
 #include "wb/graphics/device_context.h"
 
 namespace wb {
@@ -13,7 +14,8 @@ namespace wb {
 			void Run();
 		private:
 			// TODO(Chris): generalize this to window event handling
-			void OnWindowClose();
+			void closeWindow();
+			void onEvent(Event& e);
 		private:
 			bool isRunning = true;
 			Window* window;
