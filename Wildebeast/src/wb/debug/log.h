@@ -11,6 +11,10 @@ namespace wb {
         static void Init();
 
         inline static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
+
+        template<typename... Args>
+        static void LogAssert(char* fmt, const Args&... args) { s_CoreLogger->error(fmt, args...); }
+
         inline static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
     private:
         static std::shared_ptr<spdlog::logger> s_CoreLogger;

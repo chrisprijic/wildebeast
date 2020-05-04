@@ -12,3 +12,5 @@
 #else
     #error "Unsupported platform!"
 #endif
+
+#include "wb/debug/debug.h"

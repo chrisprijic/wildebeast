@@ -174,6 +174,8 @@ namespace wb {
                 NULL
             );
 
+            ASSERT(window == NULL, "window should exist")(window);
+
             if (!window) {
                 WB_CORE_ERROR("Win32: Failed to instantiate window class [WINDOWS ERROR CODE: ({0})]", GetLastError());
                 return;
