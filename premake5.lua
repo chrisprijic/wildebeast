@@ -68,6 +68,11 @@ project "Wildebeast"
         cppdialect "C++17"
         systemversion "latest"
 
+        links
+        {
+            "Xinput9_1_0.lib"
+        }
+
     filter "configurations:Debug"
         defines "WB_DEBUG"
         runtime "DEBUG"

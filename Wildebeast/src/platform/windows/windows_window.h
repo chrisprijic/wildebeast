@@ -40,6 +40,7 @@ namespace wb {
             LocalWindowCtx windowCtx;
 
             static bool _wbWindowClassRegistered;
+            static bool _wbGamepadConnected;
     };
 
 }

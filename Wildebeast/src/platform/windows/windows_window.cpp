@@ -2,8 +2,11 @@
 #include "platform/windows/windows_window.h"
 #include "platform/windows/events/windows_scancodes.h"
 
+#include <xinput.h>
+
 namespace wb {
     bool WindowsWindow::_wbWindowClassRegistered = false;
+    bool WindowsWindow::_wbGamepadConnected = false;
 
     WCHAR* createWideStringFromUTF8(std::string str) {
 
@@ -347,7 +350,136 @@ namespace wb {
         DestroyWindow(window);
     }
 
+    i16 normalizeL(i16 input) {
+        if (abs(input) < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) {
+            return 0;
+        }
+        else {
+            return input;
+        }
+    }
+
+    i16 normalizeR(i16 input) {
+        if (abs(input) < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE) {
+            return 0;
+        }
+        else {
+            return input;
+        }
+    }
+
+    i16 normalizeT(i16 input) {
+        if (abs(input) < XINPUT_GAMEPAD_TRIGGER_THRESHOLD) {
+            return 0;
+        }
+        else {
+            return input;
+        }
+    }
+
     void WindowsWindow::OnUpdate() {
+        WindowsWindow* window = (WindowsWindow*)GetPropW(this->window, L"WB_WINDOW");
+
+        XINPUT_STATE state;
+        ZeroMemory(&state, sizeof(XINPUT_STATE));
+
+        if (XInputGetState(0, &state) == ERROR_SUCCESS)
+        {
+            if (!_wbGamepadConnected) {
+                _wbGamepadConnected = true;
+                Event event;
+                event.Type = WB_EVENT_GAMEPAD_CONNECTED;
+
+                if (window->windowCtx.EventCallback != NULL) {
+                    window->windowCtx.EventCallback(event);
+                }
+            }
+
+
+            // update state
+            Event event;
+            event.Type = WB_EVENT_GAMEPAD_STATE;
+
+            event.Gamepad.LX = normalizeL(state.Gamepad.sThumbLX);
+            event.Gamepad.LY = normalizeL(state.Gamepad.sThumbLY);
+            event.Gamepad.RX = normalizeR(state.Gamepad.sThumbRX);
+            event.Gamepad.RY = normalizeR(state.Gamepad.sThumbRY);
+            event.Gamepad.LT = normalizeT(state.Gamepad.bLeftTrigger);
+            event.Gamepad.RT = normalizeT(state.Gamepad.bRightTrigger);
+
+            u8 dpad = 0;
+
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) {
+                dpad |= WB_GAMEPAD_DOWN;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) {
+                dpad |= WB_GAMEPAD_LEFT;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) {
+                dpad |= WB_GAMEPAD_RIGHT;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) {
+                dpad |= WB_GAMEPAD_UP;
+            }
+
+            event.Gamepad.DPAD = dpad;
+
+            u8 fpad = 0;
+
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
+                fpad |= WB_GAMEPAD_A;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_X) {
+                fpad |= WB_GAMEPAD_X;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_B) {
+                fpad |= WB_GAMEPAD_B;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) {
+                fpad |= WB_GAMEPAD_Y;
+            }
+
+            event.Gamepad.FPAD = fpad;
+
+            u8 aux = 0;
+
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) {
+                aux |= WB_GAMEPAD_LB;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) {
+                aux |= WB_GAMEPAD_RB;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) {
+                aux |= WB_GAMEPAD_LS;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) {
+                aux |= WB_GAMEPAD_RS;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_START) {
+                aux |= WB_GAMEPAD_START;
+            }
+            if (state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) {
+                aux |= WB_GAMEPAD_BACK;
+            }
+
+            event.Gamepad.AuxButtons = aux;
+
+            if (window->windowCtx.EventCallback != NULL) {
+                window->windowCtx.EventCallback(event);
+            }
+        }
+        else {
+            if (_wbGamepadConnected) {
+                _wbGamepadConnected = false;
+                Event event;
+                event.Type = WB_EVENT_GAMEPAD_DISCONNECTED;
+
+                if (window->windowCtx.EventCallback != NULL) {
+                    window->windowCtx.EventCallback(event);
+                }
+            }
+        }
+
         MSG msg;
 
         while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
