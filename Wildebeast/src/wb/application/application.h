@@ -22,6 +22,13 @@ namespace wb {
 			Platform* platform;
 			Window* window;
 			DeviceContext* graphicsContext;
+
+			// NOTE(Chris): TEMP for ogl triangle demo
+			u32 shader_programme;
+			i32 mvp_loc;
+			fmat4 mvp;
+			u32 vao;
+			i64 t;
 	};
 }
 
