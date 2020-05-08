@@ -42,7 +42,7 @@ namespace wb {
         WindowsWindow* window = (WindowsWindow*)GetPropW(hWnd, L"WB_WINDOW");
 
         if (window) {
-            return ((WindowsPlatform*)window->platform)->windowProc(hWnd, uMsg, wParam, lParam);
+            return ((WindowsPlatform*)window->platform)->HandleWin32Message(window, WinEventParams{ hWnd, uMsg, wParam, lParam });
         }
         else {
             return DefWindowProcW(hWnd, uMsg, wParam, lParam);

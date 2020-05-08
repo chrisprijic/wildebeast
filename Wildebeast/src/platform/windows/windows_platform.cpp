@@ -149,10 +149,13 @@ namespace wb {
         }
     }
 
-    LRESULT WindowsPlatform::windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    LRESULT WindowsPlatform::HandleWin32Message(WindowsWindow* window, WinEventParams params) {
         Event event;
 
-        switch (uMsg) {
+        // TODO(Chris): migrate handling windows-based items in WindowsWindow.
+        // TODO(Chris): migrate many input events that don't require Window (e.g. keyboard) to the main OnUpdate loop
+
+        switch (params.uMsg) {
         case WM_CLOSE:
         case WM_QUIT: {
             event.Type = WB_EVENT_QUIT;
@@ -180,18 +183,18 @@ namespace wb {
             u8 button;
             u32 action;
 
-            if (uMsg == WM_LBUTTONDOWN || uMsg == WM_LBUTTONUP)
+            if (params.uMsg == WM_LBUTTONDOWN || params.uMsg == WM_LBUTTONUP)
                 button = WB_MOUSEBUTTON_LEFT;
-            else if (uMsg == WM_RBUTTONDOWN || uMsg == WM_RBUTTONUP)
+            else if (params.uMsg == WM_RBUTTONDOWN || params.uMsg == WM_RBUTTONUP)
                 button = WB_MOUSEBUTTON_RIGHT;
-            else if (uMsg == WM_MBUTTONDOWN || uMsg == WM_MBUTTONUP)
+            else if (params.uMsg == WM_MBUTTONDOWN || params.uMsg == WM_MBUTTONUP)
                 button = WB_MOUSEBUTTON_MIDDLE;
-            else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
+            else if (GET_XBUTTON_WPARAM(params.wParam) == XBUTTON1)
                 button = WB_MOUSEBUTTON_X1;
             else
                 button = WB_MOUSEBUTTON_X2;
 
-            if (uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN || uMsg == WM_MBUTTONDOWN || uMsg == WM_XBUTTONDOWN)
+            if (params.uMsg == WM_LBUTTONDOWN || params.uMsg == WM_RBUTTONDOWN || params.uMsg == WM_MBUTTONDOWN || params.uMsg == WM_XBUTTONDOWN)
                 action = WB_EVENT_MOUSE_PRESSED;
             else
                 action = WB_EVENT_MOUSE_RELEASED;
@@ -201,22 +204,22 @@ namespace wb {
             event.Button.Code = button;
         } break;
         case WM_MOUSEMOVE: {
-            const int x = LOWORD(lParam);
-            const int y = HIWORD(lParam);
+            const int x = LOWORD(params.lParam);
+            const int y = HIWORD(params.lParam);
 
             event.Type = WB_EVENT_MOUSE_MOVED;
             event.Motion.X = x;
             event.Motion.Y = y;
         } break;
         case WM_MOUSEWHEEL: {
-            i32 yDelta = (i32)((SHORT)HIWORD(wParam) / (double)WHEEL_DELTA);
+            i32 yDelta = (i32)((SHORT)HIWORD(params.wParam) / (double)WHEEL_DELTA);
 
             event.Type = WB_EVENT_MOUSE_SCROLLED;
             event.Scroll.X = 0;
             event.Scroll.Y = yDelta;
         } break;
         case WM_MOUSEHWHEEL: {
-            i32 xDelta = (i32)((SHORT)HIWORD(wParam) / (double)WHEEL_DELTA);
+            i32 xDelta = (i32)((SHORT)HIWORD(params.wParam) / (double)WHEEL_DELTA);
 
             event.Type = WB_EVENT_MOUSE_SCROLLED;
             event.Scroll.X = xDelta;
@@ -224,13 +227,13 @@ namespace wb {
         } break;
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN: {
-            u32 scancode = WindowsScancodeToWBScanCode(lParam, wParam);
+            u32 scancode = WindowsScancodeToWBScanCode(params.lParam, params.wParam);
             event.Type = WB_EVENT_KEY_PRESSED;
             event.Key.Code = scancode;
         } break;
         case WM_SYSKEYUP:
         case WM_KEYUP: {
-            u32 scancode = WindowsScancodeToWBScanCode(lParam, wParam);
+            u32 scancode = WindowsScancodeToWBScanCode(params.lParam, params.wParam);
             event.Type = WB_EVENT_KEY_RELEASED;
             event.Key.Code = scancode;
         } break;
@@ -240,21 +243,21 @@ namespace wb {
         } break;
         case WM_SIZE: {
             i32 width, height;
-            width = LOWORD(lParam);
-            height = HIWORD(lParam);
+            width = LOWORD(params.lParam);
+            height = HIWORD(params.lParam);
 
             event.Type = WB_EVENT_WINDOW_EVENT;
             event.Window.Event = WB_WINDOWEVENT_RESIZED;
             event.Window.Width = width;
             event.Window.Height = height;
 
-            if (wParam == SIZE_MINIMIZED) {
+            if (params.wParam == SIZE_MINIMIZED) {
                 eventCallback(event);
                 event = Event{};
                 event.Type = WB_EVENT_WINDOW_EVENT;
                 event.Window.Event = WB_WINDOWEVENT_MINIMIZED;
             }
-            else if (wParam == SIZE_MAXIMIZED) {
+            else if (params.wParam == SIZE_MAXIMIZED) {
                 eventCallback(event);
                 event = Event{};
                 event.Type = WB_EVENT_WINDOW_EVENT;
@@ -268,7 +271,7 @@ namespace wb {
             eventCallback(event);
         }
 
-        return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+        return DefWindowProcW(params.hWnd, params.uMsg, params.wParam, params.lParam);
     }
 
     WindowsPlatform::WindowsPlatform() {
