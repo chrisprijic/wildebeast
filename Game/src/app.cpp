@@ -98,6 +98,7 @@ void onGamepadDisconnect(wb::Event& event) {
 class SandboxApp : public wb::Application {
 public:
 	SandboxApp() {
+
 	}
 
 	~SandboxApp() {

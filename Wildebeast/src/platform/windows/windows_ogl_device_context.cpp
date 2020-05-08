@@ -91,7 +91,10 @@ namespace wb {
         glGetIntegerv(GL_MAJOR_VERSION, &glMaj);
         glGetIntegerv(GL_MINOR_VERSION, &glMin);
 
-        WB_CORE_INFO("Initialized OpenGL {0}.{1}", glMaj, glMin);
+        const GLubyte* vendor = glGetString(GL_VENDOR);
+        const GLubyte* renderer = glGetString(GL_RENDERER);
+
+        WB_CORE_INFO("Initialized OpenGL {0}.{1} on device {2} {3}", glMaj, glMin, vendor, renderer);
 
         return true;
     }
@@ -104,9 +107,6 @@ namespace wb {
     }
 
     void WindowsOGLDeviceContext::SwapBuffers() {
-        //TODO(Chris): move the clear color calls out into the Renderer API once we make it.
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         ::SwapBuffers(hdc);
     }
 
