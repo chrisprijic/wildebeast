@@ -287,6 +287,7 @@ namespace wb {
     }
 
     void WindowsPlatform::OnUpdate() {
+        // TODO(Chris): Move this into proper functions
         XINPUT_STATE state;
         ZeroMemory(&state, sizeof(XINPUT_STATE));
 
