@@ -5,8 +5,12 @@
 
 namespace wb {
     Application::Application() {
-        window = Window::Create();
-        window->SetEventCallback(std::bind(&Application::onEvent, this, std::placeholders::_1));
+        platform = Platform::Create();
+        platform->SetEventCallback(std::bind(&Application::onEvent, this, std::placeholders::_1));
+        platform->Init();
+
+        window = platform->NewWindow();
+
         graphicsContext = DeviceContext::Create(WB_DEVICECONTEXT_OPENGL, window);
         graphicsContext->Init();
         graphicsContext->SetVSync(true);
@@ -35,7 +39,7 @@ namespace wb {
     void Application::Run() {
         while (isRunning) {
             graphicsContext->MakeCurrent();
-            window->OnUpdate();
+            platform->OnUpdate();
             graphicsContext->SwapBuffers();
         }
     }

@@ -2,7 +2,6 @@
 
 #include "wbpch.h"
 #include "wb/core/core.h"
-#include "wb/events/events.h"
 
 namespace wb {
 
@@ -19,23 +18,16 @@ namespace wb {
         }
     };
 
-	// Interface representing a desktop system based Window
-	class Window {
-	public:
-		using EventCallbackFn = std::function<void(Event&)>;
-
+    // Interface representing a desktop system based Window
+    class Window {
+    public:
         virtual ~Window() {}
-
-        virtual void OnUpdate() = 0;
 
         virtual u32 GetWidth() const = 0;
         virtual u32 GetHeight() const = 0;
 
         // Window attributes
-        virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
-        virtual void* GetNativeWindow() const = 0;
-
-        static Window* Create(const WindowCtx& props = WindowCtx());
+        virtual pvoid GetNativeWindow() const = 0;
     };
 
 }
