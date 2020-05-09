@@ -113,13 +113,15 @@ namespace wb {
     }
 
     void Application::Run() {
-        while (isRunning) {
+		while (isRunning) {
 			t++;
-            graphicsContext->MakeCurrent();
-            platform->OnUpdate();
+			graphicsContext->MakeCurrent();
+			platform->OnUpdate();
 
-			glClearColor(1.0, 1.0, 0.0, 1.0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glClearDepthf(1.0f);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			f32 rgb[3] = { 1.0f, 0.0f, 0.0f };
+			glClearBufferfv(GL_COLOR, 0, rgb);
 
 			mvp.m41 = cos(t / 1000.0);
 			mvp.m42 = sin(t / 1000.0);
