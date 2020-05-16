@@ -3,6 +3,8 @@
 #include "wb/application/application.h"
 #include "wb/events/event_router.h"
 
+#include <D3Dcompiler.h>
+
 namespace wb {
     Application::Application() {
         platform = Platform::Create();
@@ -63,6 +65,59 @@ namespace wb {
             rtvHandle.Offset(1, heapStepSize);
         }
 
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        ID3DBlob* signature;
+        ID3DBlob* error;
+        D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+        device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSig));
+
+        ID3DBlob* vertexShader;
+        ID3DBlob* pixelShader;
+
+        D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\shader.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vertexShader, nullptr);
+        D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\shader.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &pixelShader, nullptr);
+
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+        };
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+        psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+        psoDesc.pRootSignature = rootSig;
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader);
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader);
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DepthStencilState.StencilEnable = FALSE;
+        psoDesc.SampleMask = UINT_MAX;
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.SampleDesc.Count = 1;
+        device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
+
+        Vertex points[] = {
+            {{ 0.0f,  (1280.0f / 720.0f) * 0.25f,  0.0f  }, { 1.0f, 0.0f, 0.0f, 1.0f }},
+            {{ 0.25f, (1280.0f / 720.0f) * -0.25f,  0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f }},
+            {{-0.25f, (1280.0f / 720.0f) * -0.25f,  0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f }}
+        };
+
+        const u32 vertexBufferSize = sizeof(points);
+
+        device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexBuffer));
+        pu8 pVertexDataBegin;
+        CD3DX12_RANGE readRange(0, 0);
+        vertexBuffer->Map(0, &readRange, (void**) (&pVertexDataBegin));
+        memcpy(pVertexDataBegin, points, vertexBufferSize);
+        vertexBuffer->Unmap(0, nullptr);
+
+        vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+        vertexBufferView.StrideInBytes = sizeof(Vertex);
+        vertexBufferView.SizeInBytes = vertexBufferSize;
+
         device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
         fenceValue = 1;
 
@@ -98,7 +153,11 @@ namespace wb {
             mvp.m42 = sin(t / 1000.0);
 
             cmdAllocator->Reset();
-            cmdList->Reset(cmdAllocator, nullptr);
+            cmdList->Reset(cmdAllocator, pipelineState);
+
+            cmdList->SetGraphicsRootSignature(rootSig);
+            cmdList->RSSetViewports(1, &CD3DX12_VIEWPORT(0.0f, 0.0f, 1280.0f, 720.0f));
+            cmdList->RSSetScissorRects(1, &CD3DX12_RECT(0, 0, 1280, 720));
 
             D3D12_RESOURCE_BARRIER barrier = {};
             barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -111,9 +170,13 @@ namespace wb {
             cmdList->ResourceBarrier(1, &barrier);
 
             CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap->GetCPUDescriptorHandleForHeapStart(), frameIndex, heapStepSize);
+            cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
             const float color[] = { 0.0f, 0.2f, 0.4f, 1.0f };
             cmdList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
+            cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+            cmdList->DrawInstanced(3, 1, 0, 0);
 
             barrier = {};
             barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
