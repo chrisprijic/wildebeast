@@ -6,6 +6,9 @@
 #include "wb/events/events.h"
 #include "wb/graphics/device_context.h"
 
+#include <d3dx12.h>
+#include <dxgi1_5.h>
+
 namespace wb {
     class Application {
         public:
@@ -29,6 +32,23 @@ namespace wb {
 			fmat4 mvp;
 			u32 vao;
 			i64 t;
+
+			//NOTE(Chris): TEMP for d3d12 triangle demo
+			IDXGIFactory5* factory;
+			IDXGIAdapter1* adapter;
+			ID3D12Device* device;
+			ID3D12CommandQueue* cmdQueue;
+			ID3D12CommandAllocator* cmdAllocator;
+			ID3D12GraphicsCommandList* cmdList;
+			IDXGISwapChain3* swapChain;
+			ID3D12DescriptorHeap* heap;
+			u32 frameIndex;
+			u32 heapStepSize;
+			ID3D12Resource* renderTargets[2];
+			ID3D12PipelineState* pipelineState;
+			ID3D12Fence* fence;
+			u32 fenceValue;
+			HANDLE fenceEvent;
 	};
 }
 

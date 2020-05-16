@@ -3,8 +3,6 @@
 #include "wb/application/application.h"
 #include "wb/events/event_router.h"
 
-#include <GL/glew.h>
-
 namespace wb {
     Application::Application() {
         platform = Platform::Create();
@@ -13,83 +11,62 @@ namespace wb {
 
         window = platform->NewWindow();
 
-        graphicsContext = DeviceContext::Create(WB_DEVICECONTEXT_OPENGL, window);
-        graphicsContext->Init();
-        //graphicsContext->SetVSync(true);
+        CreateDXGIFactory(IID_PPV_ARGS(&factory));
+        for (UINT adapterIndex = 0;; adapterIndex++) {
+            if (DXGI_ERROR_NOT_FOUND == factory->EnumAdapters1(adapterIndex, &adapter)) {
+                break;
+            }
 
-		glEnable(GL_DEPTH_TEST); // enable depth-testing
-		glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
+            if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr))) {
+                break;
+            }
+        }
 
-		f32 points[] = {
-		0.0f,  0.5f,  0.0f,
-		0.5f, -0.5f,  0.0f,
-		-0.5f, -0.5f,  0.0f
-		};
+        D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
 
-		u32 vbo = 0;
-		glGenBuffers(1, &vbo);
-		WB_ASSERT(vbo != 0, "VAO cannot be 0")(vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(f32), points, GL_STATIC_DRAW);
+        D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
+        device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&cmdQueue));
 
-		vao = 0;
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAllocator));
 
-		const char* vertex_shader =
-			"#version 400\n"
-			"in vec3 vp;"
-			"uniform mat4 mvp;"
-			"void main () {"
-			"  gl_Position = mvp * vec4 (vp, 1.0);"
-			"}";
+        device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocator, nullptr, IID_PPV_ARGS(&cmdList));
+        cmdList->Close();
 
-		const char* fragment_shader =
-			"#version 400\n"
-			"out vec4 frag_colour;"
-			"void main () {"
-			"  frag_colour = vec4 (0.5, 0.0, 0.5, 1.0);"
-			"}";
+        IDXGISwapChain1* tempSwapChain;
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+        swapChainDesc.Width = 1280;
+        swapChainDesc.Height = 720;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.BufferCount = 2;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.SampleDesc.Count = 1;
+        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-		u32 vs = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vs, 1, &vertex_shader, NULL);
-		glCompileShader(vs);
-		int params = -1;
-		glGetShaderiv(vs, GL_COMPILE_STATUS, &params);
-		if (GL_TRUE != params) {
-			printf("ERROR: GL shader index %i did not compile\n", vs);
-		}
-		u32 fs = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fs, 1, &fragment_shader, NULL);
-		glCompileShader(fs);
-		glGetShaderiv(vs, GL_COMPILE_STATUS, &params);
-		if (GL_TRUE != params) {
-			printf("ERROR: GL shader index %i did not compile\n", fs);
-		}
-		shader_programme = glCreateProgram();
-		glAttachShader(shader_programme, fs);
-		glAttachShader(shader_programme, vs);
-		glLinkProgram(shader_programme);
-		glGetProgramiv(shader_programme, GL_LINK_STATUS, &params);
-		if (GL_TRUE != params) {
-			printf(
-				"ERROR: could not link shader program w/ GL index %u\n",
-				shader_programme
-			);
-		}
-		GLint err;
-		while ((err = glGetError()) != GL_NO_ERROR) {
-			std::cout << "OpenGL error before rendering: " << err << std::endl;
-		}
-		//--------------------------------------------
+        factory->CreateSwapChainForHwnd(cmdQueue, (HWND) window->GetNativeWindow(), &swapChainDesc, nullptr, nullptr, &tempSwapChain);
+        swapChain = (IDXGISwapChain3*) tempSwapChain;
 
-		glUseProgram(shader_programme);
-		mvp_loc = glGetUniformLocation(shader_programme, "mvp");
-		mvp = fmat4{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
-		t = 0;
+        frameIndex = swapChain->GetCurrentBackBufferIndex();
+
+
+        D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+        heapDesc.NumDescriptors = 2;
+        heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
+        heapStepSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap->GetCPUDescriptorHandleForHeapStart());
+
+        for (u32 n = 0; n < 2; n++) {
+            swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n]));
+            device->CreateRenderTargetView(renderTargets[n], nullptr, rtvHandle);
+            rtvHandle.Offset(1, heapStepSize);
+        }
+
+        device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+        fenceValue = 1;
+
+        fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     }
 
 
@@ -115,26 +92,57 @@ namespace wb {
     void Application::Run() {
 		while (isRunning) {
 			t++;
-			graphicsContext->MakeCurrent();
 			platform->OnUpdate();
 
-			glClearDepthf(1.0f);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			f32 rgb[3] = { 1.0f, 0.0f, 0.0f };
-			glClearBufferfv(GL_COLOR, 0, rgb);
+            mvp.m41 = cos(t / 1000.0);
+            mvp.m42 = sin(t / 1000.0);
 
-			mvp.m41 = cos(t / 1000.0);
-			mvp.m42 = sin(t / 1000.0);
+            cmdAllocator->Reset();
+            cmdList->Reset(cmdAllocator, nullptr);
 
-			//--------------------------------------------
-			glUseProgram(shader_programme);
-			glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, glPtr(mvp));
-			glBindVertexArray(vao);
-			// draw points 0-3 from the currently bound VAO with current in-use shader
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-			//--------------------------------------------
+            D3D12_RESOURCE_BARRIER barrier = {};
+            barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            barrier.Transition.pResource = renderTargets[frameIndex];
+            barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            cmdList->ResourceBarrier(1, &barrier);
+
+            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap->GetCPUDescriptorHandleForHeapStart(), frameIndex, heapStepSize);
+
+            const float color[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+            cmdList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
+
+            barrier = {};
+            barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            barrier.Transition.pResource = renderTargets[frameIndex];
+            barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+            barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            cmdList->ResourceBarrier(1, &barrier);
+            cmdList->Close();
+
+            ID3D12CommandList* ppCmdLists[] = { cmdList };
+            cmdQueue->ExecuteCommandLists(_countof(ppCmdLists), ppCmdLists);
+
 			std::cout << '.';
-            graphicsContext->SwapBuffers();
+
+            swapChain->Present(1, 0);
+
+            const u64 cFence = fenceValue;
+            cmdQueue->Signal(fence, cFence);
+            fenceValue++;
+
+            if (fence->GetCompletedValue() < cFence) {
+                fence->SetEventOnCompletion(cFence, fenceEvent);
+                WaitForSingleObject(fenceEvent, INFINITE);
+            }
+
+            frameIndex = swapChain->GetCurrentBackBufferIndex();
         }
     }
 }
