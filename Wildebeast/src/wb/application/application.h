@@ -57,10 +57,12 @@ namespace wb {
 			ID3D12CommandAllocator* cmdAllocator;
 			ID3D12GraphicsCommandList* cmdList;
 			IDXGISwapChain3* swapChain;
-			ID3D12DescriptorHeap* heap;
+			ID3D12DescriptorHeap* rtvHeap;
+			ID3D12DescriptorHeap* dsvHeap;
 			u32 frameIndex;
 			u32 heapStepSize;
 			ID3D12Resource* renderTargets[2];
+			ID3D12Resource* depthBuffer;
 			ID3D12Fence* fence;
 			u32 fenceValue;
 			HANDLE fenceEvent;
