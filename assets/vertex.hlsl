@@ -13,7 +13,7 @@ VSOutput VSMain(float3 position : POSITION, float4 color : COLOR)
 {
     VSOutput result;
 
-    result.Position = mul(MVP, float4(position, 1.0));
+    result.Position = mul(MVP, float4(position, 1.0f));
     result.Color = color;
 
     return result;
