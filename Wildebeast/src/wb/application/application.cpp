@@ -13,7 +13,11 @@ namespace wb {
 
         window = platform->NewWindow();
 
-        CreateDXGIFactory(IID_PPV_ARGS(&factory));
+        D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
+        debugController->EnableDebugLayer();
+        u32 dxgiFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+
+        CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory));
         for (UINT adapterIndex = 0;; adapterIndex++) {
             if (DXGI_ERROR_NOT_FOUND == factory->EnumAdapters1(adapterIndex, &adapter)) {
                 break;
@@ -65,18 +69,37 @@ namespace wb {
             rtvHandle.Offset(1, heapStepSize);
         }
 
-        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+        rootParameters[0].InitAsConstants(sizeof(fmat4) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+
+        D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
         ID3DBlob* signature;
         ID3DBlob* error;
-        D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+        HRESULT res = D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &signature, &error);
+
         device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSig));
 
         ID3DBlob* vertexShader;
         ID3DBlob* pixelShader;
 
-        D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\shader.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vertexShader, nullptr);
-        D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\shader.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &pixelShader, nullptr);
+        HRESULT hr = D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\vertex.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vertexShader, &error);
+        if (FAILED(hr)) {
+            OutputDebugStringA((char*) error->GetBufferPointer());
+        }
+
+        hr = D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\pixel.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &pixelShader, &error);
+        if (FAILED(hr)) {
+            OutputDebugStringA((char*) error->GetBufferPointer());
+        }
 
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -100,9 +123,9 @@ namespace wb {
         device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
 
         Vertex points[] = {
-            {{ 0.0f,  (1280.0f / 720.0f) * 0.25f,  0.0f  }, { 1.0f, 0.0f, 0.0f, 1.0f }},
-            {{ 0.25f, (1280.0f / 720.0f) * -0.25f,  0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f }},
-            {{-0.25f, (1280.0f / 720.0f) * -0.25f,  0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f }}
+            {{  0.00f,  0.25f,  0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f }},
+            {{  0.25f, -0.25f,  0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f }},
+            {{ -0.25f, -0.25f,  0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f }}
         };
 
         const u32 vertexBufferSize = sizeof(points);
@@ -149,13 +172,23 @@ namespace wb {
 			t++;
 			platform->OnUpdate();
 
-            mvp.m41 = cos(t / 1000.0);
-            mvp.m42 = sin(t / 1000.0);
+            mvp.m14 = cos(t / 1000.0);
+            mvp.m24 = sin(t / 1000.0);
+
+            const u64 cFence = fenceValue;
+            cmdQueue->Signal(fence, cFence);
+            fenceValue++;
+
+            if (fence->GetCompletedValue() < cFence) {
+                fence->SetEventOnCompletion(cFence, fenceEvent);
+                WaitForSingleObject(fenceEvent, INFINITE);
+            }
 
             cmdAllocator->Reset();
             cmdList->Reset(cmdAllocator, pipelineState);
 
             cmdList->SetGraphicsRootSignature(rootSig);
+            cmdList->SetPipelineState(pipelineState);
             cmdList->RSSetViewports(1, &CD3DX12_VIEWPORT(0.0f, 0.0f, 1280.0f, 720.0f));
             cmdList->RSSetScissorRects(1, &CD3DX12_RECT(0, 0, 1280, 720));
 
@@ -170,12 +203,14 @@ namespace wb {
             cmdList->ResourceBarrier(1, &barrier);
 
             CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap->GetCPUDescriptorHandleForHeapStart(), frameIndex, heapStepSize);
-            cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
             const float color[] = { 0.0f, 0.2f, 0.4f, 1.0f };
             cmdList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
             cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+            CB cb = CB{ mvp };
+            cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+            cmdList->SetGraphicsRoot32BitConstants(0, sizeof(fmat4) / 4, &cb, 0);
             cmdList->DrawInstanced(3, 1, 0, 0);
 
             barrier = {};
@@ -194,16 +229,7 @@ namespace wb {
 
 			std::cout << '.';
 
-            swapChain->Present(1, 0);
-
-            const u64 cFence = fenceValue;
-            cmdQueue->Signal(fence, cFence);
-            fenceValue++;
-
-            if (fence->GetCompletedValue() < cFence) {
-                fence->SetEventOnCompletion(cFence, fenceEvent);
-                WaitForSingleObject(fenceEvent, INFINITE);
-            }
+            swapChain->Present(0, 0);
 
             frameIndex = swapChain->GetCurrentBackBufferIndex();
         }

@@ -16,6 +16,10 @@ namespace wb {
 		fvec4 color;
 	};
 
+	struct CB {
+		fmat4 MVP;
+	};
+
     class Application {
         public:
             Application();
@@ -35,13 +39,19 @@ namespace wb {
 			// NOTE(Chris): TEMP for ogl triangle demo
 			u32 shader_programme;
 			i32 mvp_loc;
-			fmat4 mvp;
+			fmat4 mvp = {
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			};
 			u32 vao;
-			i64 t;
+			i64 t = 0;
 
 			//NOTE(Chris): TEMP for d3d12 triangle demo
 			IDXGIFactory5* factory;
 			IDXGIAdapter1* adapter;
+			ID3D12Debug* debugController;
 			ID3D12Device* device;
 			ID3D12CommandQueue* cmdQueue;
 			ID3D12CommandAllocator* cmdAllocator;
