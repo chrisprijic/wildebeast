@@ -20,6 +20,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
 IncludeDir["GLEW"] = "Wildebeast/vendor/GLEW/include"
+IncludeDir["d3dx12"] = "Wildebeast/vendor/d3dx12/include"
 
 group "Dependencies"
     include "Wildebeast/vendor/GLEW"
@@ -70,7 +71,16 @@ project "Wildebeast"
 
         links
         {
-            "Xinput9_1_0.lib"
+            "Xinput9_1_0.lib",
+            "d3dcompiler", 
+            "dxguid", 
+            "d3d12", 
+            "dxgi"
+        }
+
+        includedirs 
+        {
+            "%{IncludeDir.d3dx12}"
         }
 
     filter "configurations:Debug"
@@ -118,6 +128,11 @@ project "Game"
     filter "system:windows"
 		cppdialect "C++17"
 		systemversion "latest"
+
+        includedirs 
+        {
+            "%{IncludeDir.d3dx12}"
+        }
 
 	filter "configurations:Debug"
 		defines "WB_DEBUG"

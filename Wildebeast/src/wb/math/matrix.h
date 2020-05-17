@@ -3,7 +3,7 @@
 #include "wb/core/types.h"
 
 namespace wb {
-	//#define COLUMN_MAJOR -- define this if you want to use it.
+//#define COLUMN_MAJOR //-- define this if you want to use it.
 #define ROW_MAJOR
 
 	template<typename T>
