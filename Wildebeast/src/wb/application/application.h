@@ -7,8 +7,17 @@
 #include "wb/graphics/device_context.h"
 #include "wb/math/math.h"
 
-#include <d3dx12.h>
-#include <dxgi1_5.h>
+// ogl
+//#include <GL/glew.h>
+
+// d3d12
+//#include <d3dx12.h>
+//#include <dxgi1_5.h>
+
+// vulkan
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
+#include <vulkan/vk_sdk_platform.h>
 
 namespace wb {
 	struct Vertex {
@@ -48,8 +57,8 @@ namespace wb {
 			u32 vao;
 			i64 t = 0;
 
-			//NOTE(Chris): TEMP for d3d12 triangle demo
-			IDXGIFactory5* factory;
+			// NOTE(Chris): TEMP for d3d12 triangle demo
+			/*IDXGIFactory5* factory;
 			IDXGIAdapter1* adapter;
 			ID3D12Debug* debugController;
 			ID3D12Device* device;
@@ -71,7 +80,29 @@ namespace wb {
 			ID3D12PipelineState* pipelineState;
 
 			ID3D12Resource* vertexBuffer;
-			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;*/
+
+			// NOTE(Chris): TEMP for vulkan triangle demo
+			VkInstance instance;
+			VkPhysicalDevice physicalDevice;
+			std::vector<const char*> physicalDeviceExtensions;
+			u32 queueFamily = 0;
+			VkDevice device;
+			VkQueue queue;
+			VkSurfaceKHR surface;
+			VkSwapchainKHR swapChain;
+			std::vector<VkImage> swapChainImages;
+			std::vector<VkImageView> RTVs;
+			std::vector<VkFramebuffer> RTVFBs;
+			VkFormat rtvFormat;
+			VkPipelineLayout pipelineLayout;
+			VkRenderPass renderPass;
+			VkPipeline graphicsPipeline;
+			VkCommandPool commandPool;
+			std::vector<VkCommandBuffer> commandBuffers;
+			VkSemaphore imageAvailableSemaphore;
+			VkSemaphore renderFinishedSemaphore;
+			u32 frameIndex = 0;
 	};
 }
 

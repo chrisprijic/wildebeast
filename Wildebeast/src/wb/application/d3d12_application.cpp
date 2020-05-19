@@ -1,5 +1,5 @@
 #include "wbpch.h"
-
+/*
 #include "wb/application/application.h"
 #include "wb/events/event_router.h"
 
@@ -268,4 +268,4 @@ namespace wb {
             frameIndex = swapChain->GetCurrentBackBufferIndex();
         }
     }
-}
+}*/
