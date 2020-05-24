@@ -42,21 +42,26 @@ namespace wb {
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
+
+        std::vector<char*> extensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+
+        createInfo.enabledExtensionCount = static_cast<u32>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
         createInfo.enabledLayerCount = 0;
 
-        vkCreateInstance(&createInfo, nullptr, &instance);
+        VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
 
         VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         surfaceCreateInfo.hwnd = (HWND) window->GetNativeWindow();
         surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 
-        vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
+        result = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
 
         u32 deviceCount = 0;
-        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+        result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
         std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
-        vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
+        result = vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
         // for now, find discrete GPU rather than integrated graphics
         for (VkPhysicalDevice physdev : physicalDevices) {
             VkPhysicalDeviceProperties deviceProperties;
@@ -65,9 +70,9 @@ namespace wb {
             vkGetPhysicalDeviceFeatures(physdev, &deviceFeatures);
 
             uint32_t extensionCount;
-            vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, nullptr);
+            result = vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, nullptr);
             std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-            vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, availableExtensions.data());
+            result = vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, availableExtensions.data());
 
             if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
                 bool found = false;
@@ -94,7 +99,7 @@ namespace wb {
 
         for (u32 i = 0; i < queueFamilies.size(); i++) {
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+            result = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
             if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT && presentSupport) {
                 queueFamily = i;
                 break;
@@ -118,13 +123,13 @@ namespace wb {
         deviceCreateInfo.enabledExtensionCount = static_cast<u32>(physicalDeviceExtensions.size());
         deviceCreateInfo.ppEnabledExtensionNames = physicalDeviceExtensions.data();
 
-        vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
+        result = vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
         vkGetDeviceQueue(device, queueFamily, 0, &queue);
 
         rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;
 
         VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
+        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
 
         VkSwapchainCreateInfoKHR swapChainCreateInfo{};
         swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -141,13 +146,13 @@ namespace wb {
         swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
         swapChainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
 
-        vkCreateSwapchainKHR(device, &swapChainCreateInfo, nullptr, &swapChain);
+        result = vkCreateSwapchainKHR(device, &swapChainCreateInfo, nullptr, &swapChain);
 
         u32 imageCount = 0;
-        vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+        result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
         swapChainImages.resize(imageCount);
         RTVs.resize(imageCount);
-        vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+        result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
 
         for (u32 i = 0; i < swapChainImages.size(); i++) {
             VkImageViewCreateInfo imageViewCreateInfo{};
@@ -164,11 +169,11 @@ namespace wb {
             imageViewCreateInfo.subresourceRange.levelCount = 1;
             imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
             imageViewCreateInfo.subresourceRange.layerCount = 1;
-            vkCreateImageView(device, &imageViewCreateInfo, nullptr, &RTVs[i]);
+            result = vkCreateImageView(device, &imageViewCreateInfo, nullptr, &RTVs[i]);
         }
 
-        auto vertShaderCode = readFile("C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\vert.spv");
-        auto fragShaderCode = readFile("C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\frag.spv");
+        auto vertShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\vert.spv");
+        auto fragShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\frag.spv");
 
         VkShaderModuleCreateInfo vsCreateInfo{};
         vsCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -276,7 +281,7 @@ namespace wb {
         pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
         pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
-        vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
+        result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
 
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = rtvFormat;
@@ -314,7 +319,7 @@ namespace wb {
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass);
+        result = vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass);
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -334,7 +339,7 @@ namespace wb {
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
         pipelineInfo.basePipelineIndex = -1; // Optional
 
-        vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+        result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 
         RTVFBs.resize(RTVs.size());
 
