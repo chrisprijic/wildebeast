@@ -1,6 +1,7 @@
 #include "wbpch.h"
 
 #include "wb/application/application.h"
+#ifdef WB_VULKAN
 #include "wb/events/event_router.h"
 
 #include <fstream>
@@ -45,6 +46,8 @@ namespace wb {
     }
 
     Application::Application() {
+        // RHC -> LHC
+        ndc.m22 = -1.0f;
         platform = Platform::Create();
         platform->SetEventCallback(std::bind(&Application::onEvent, this, std::placeholders::_1));
         platform->Init();
@@ -236,9 +239,9 @@ namespace wb {
         }
 
         const std::vector<Vertex> vertices = {
-            {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-            {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+            {{  0.00f,  0.25f,  0.0f }, { 1.0f, 0.0f, 0.0f}},
+            {{  0.25f, -0.25f,  0.0f }, { 0.0f, 1.0f, 0.0f }},
+            {{ -0.25f, -0.25f,  0.0f }, { 0.0f, 0.0f, 1.0f }}
         };
 
         VkBufferCreateInfo bufferInfo{};
@@ -625,12 +628,12 @@ namespace wb {
             t++;
             platform->OnUpdate();
 
-            mvp.m14 = cosf(-t / 1000.0f);
-            mvp.m24 = sinf(-t / 1000.0f);
+            mvp.m41 = cosf(t / 1000.0f);
+            mvp.m42 = sinf(t / 1000.0f);
 
             vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
 
-            UBO ubo = { mvp };
+            UBO ubo = { mvp * ndc };
 
             void* data;
             vkMapMemory(device, uniformBuffersMemory[frameIndex], 0, sizeof(ubo), 0, &data);
@@ -701,3 +704,4 @@ namespace wb {
         }
     }
 }
+#endif

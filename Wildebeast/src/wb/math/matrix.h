@@ -2,9 +2,6 @@
 
 #include "wb/core/types.h"
 
-// for vulkan
-#define COLUMN_MAJOR
-
 namespace wb {
 #if !defined(ROW_MAJOR) && !defined(COLUMN_MAJOR)
 #define ROW_MAJOR

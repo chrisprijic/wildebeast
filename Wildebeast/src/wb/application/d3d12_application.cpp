@@ -1,6 +1,7 @@
 #include "wbpch.h"
-/*
+
 #include "wb/application/application.h"
+#ifdef WB_DX12
 #include "wb/events/event_router.h"
 
 #include <D3Dcompiler.h>
@@ -97,12 +98,12 @@ namespace wb {
         ID3DBlob* vertexShader;
         ID3DBlob* pixelShader;
 
-        HRESULT hr = D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\vertex.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vertexShader, &error);
+        HRESULT hr = D3DCompileFromFile(L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\vertex.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vertexShader, &error);
         if (FAILED(hr)) {
             OutputDebugStringA((char*) error->GetBufferPointer());
         }
 
-        hr = D3DCompileFromFile(L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\pixel.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &pixelShader, &error);
+        hr = D3DCompileFromFile(L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\pixel.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &pixelShader, &error);
         if (FAILED(hr)) {
             OutputDebugStringA((char*) error->GetBufferPointer());
         }
@@ -202,8 +203,8 @@ namespace wb {
 			t++;
 			platform->OnUpdate();
 
-            mvp.m14 = cos(t / 1000.0);
-            mvp.m24 = sin(t / 1000.0);
+            mvp.m41 = cos(t / 1000.0);
+            mvp.m42 = sin(t / 1000.0);
 
             const u64 cFence = fenceValue;
             cmdQueue->Signal(fence, cFence);
@@ -242,7 +243,7 @@ namespace wb {
 
             cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
-            CB cb = CB{ mvp };
+            CB cb = CB{ mvp * ndc };
             cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
             cmdList->SetGraphicsRoot32BitConstants(0, sizeof(fmat4) / 4, &cb, 0);
             cmdList->DrawInstanced(3, 1, 0, 0);
@@ -268,4 +269,5 @@ namespace wb {
             frameIndex = swapChain->GetCurrentBackBufferIndex();
         }
     }
-}*/
+}
+#endif
