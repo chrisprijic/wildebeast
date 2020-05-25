@@ -24,6 +24,26 @@ namespace wb {
         return buffer;
     }
 
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+        void* pUserData) {
+
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+
+        return VK_FALSE;
+    }
+
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+        auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+        if (func != nullptr) {
+            return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+        } else {
+            return VK_ERROR_EXTENSION_NOT_PRESENT;
+        }
+    }
+
     Application::Application() {
         platform = Platform::Create();
         platform->SetEventCallback(std::bind(&Application::onEvent, this, std::placeholders::_1));
@@ -39,17 +59,60 @@ namespace wb {
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
+        const std::vector<const char*> validationLayers = {
+            "VK_LAYER_KHRONOS_validation"
+        };
+
+#ifdef WB_DEBUG
+        const bool enableValidationLayers = true;
+#else
+        const bool enableValidationLayers = false;
+#endif
+
+        u32 layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+
+        uint32_t extensionCount = 0;
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+        std::vector<VkExtensionProperties> extensions2(extensionCount);
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions2.data());
+
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
 
         std::vector<char*> extensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+        if (enableValidationLayers) {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
 
         createInfo.enabledExtensionCount = static_cast<u32>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
-        createInfo.enabledLayerCount = 0;
+
+        VkDebugUtilsMessengerCreateInfoEXT createDebugInfo{};
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<u32>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+            
+            createDebugInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+            createDebugInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+            createDebugInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+            createDebugInfo.pfnUserCallback = debugCallback;
+            createDebugInfo.pUserData = nullptr; // Optional
+
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &createDebugInfo;
+
+        } else {
+            createInfo.enabledLayerCount = 0;
+        }
 
         VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+
+        CreateDebugUtilsMessengerEXT(instance, &createDebugInfo, nullptr, &debugMessenger);
 
         VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -69,7 +132,7 @@ namespace wb {
             vkGetPhysicalDeviceProperties(physdev, &deviceProperties);
             vkGetPhysicalDeviceFeatures(physdev, &deviceFeatures);
 
-            uint32_t extensionCount;
+            u32 extensionCount;
             result = vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, nullptr);
             std::vector<VkExtensionProperties> availableExtensions(extensionCount);
             result = vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, availableExtensions.data());
@@ -137,7 +200,7 @@ namespace wb {
         swapChainCreateInfo.minImageCount = 2;
         swapChainCreateInfo.imageFormat = rtvFormat;
         swapChainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        swapChainCreateInfo.imageExtent = VkExtent2D{ 1280, 720 };
+        swapChainCreateInfo.imageExtent = VkExtent2D{ 1264, 681 };
         swapChainCreateInfo.imageArrayLayers = 1;
         swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         swapChainCreateInfo.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
@@ -178,16 +241,16 @@ namespace wb {
         VkShaderModuleCreateInfo vsCreateInfo{};
         vsCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         vsCreateInfo.codeSize = vertShaderCode.size();
-        vsCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vertShaderCode.data());
+        vsCreateInfo.pCode = reinterpret_cast<const u32*>(vertShaderCode.data());
         VkShaderModule vs;
         vkCreateShaderModule(device, &vsCreateInfo, nullptr, &vs);
 
         VkShaderModuleCreateInfo fsCreateInfo{};
         fsCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         fsCreateInfo.codeSize = fragShaderCode.size();
-        fsCreateInfo.pCode = reinterpret_cast<const uint32_t*>(fragShaderCode.data());
+        fsCreateInfo.pCode = reinterpret_cast<const u32*>(fragShaderCode.data());
         VkShaderModule fs;
-        vkCreateShaderModule(device, &vsCreateInfo, nullptr, &fs);
+        vkCreateShaderModule(device, &fsCreateInfo, nullptr, &fs);
 
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -218,14 +281,14 @@ namespace wb {
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = 1280.0f;
-        viewport.height = 720.0f;
+        viewport.width = 1264.0f;
+        viewport.height = 681.0f;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = VkExtent2D{ 1280, 720 };
+        scissor.extent = VkExtent2D{ 1264, 681 };
 
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -353,8 +416,8 @@ namespace wb {
             framebufferInfo.renderPass = renderPass;
             framebufferInfo.attachmentCount = 1;
             framebufferInfo.pAttachments = attachments;
-            framebufferInfo.width = 1280;
-            framebufferInfo.height = 720;
+            framebufferInfo.width = 1264;
+            framebufferInfo.height = 681;
             framebufferInfo.layers = 1;
 
             vkCreateFramebuffer(device, &framebufferInfo, nullptr, &RTVFBs[i]);
@@ -373,7 +436,7 @@ namespace wb {
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = commandPool;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
+        allocInfo.commandBufferCount = (u32) commandBuffers.size();
 
         vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data());
 
@@ -430,7 +493,7 @@ namespace wb {
             renderPassInfo.renderPass = renderPass;
             renderPassInfo.framebuffer = RTVFBs[frameIndex];
             renderPassInfo.renderArea.offset = { 0, 0 };
-            renderPassInfo.renderArea.extent = VkExtent2D{ 1280, 720 };
+            renderPassInfo.renderArea.extent = VkExtent2D{ 1264, 681 };
 
             VkClearValue clearColor = { 0.0f, 0.2f, 0.4f, 1.0f };
             renderPassInfo.clearValueCount = 1;

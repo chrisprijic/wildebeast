@@ -84,6 +84,7 @@ namespace wb {
 
 			// NOTE(Chris): TEMP for vulkan triangle demo
 			VkInstance instance;
+			VkDebugUtilsMessengerEXT debugMessenger;
 			VkPhysicalDevice physicalDevice;
 			std::vector<const char*> physicalDeviceExtensions;
 			u32 queueFamily = 0;
