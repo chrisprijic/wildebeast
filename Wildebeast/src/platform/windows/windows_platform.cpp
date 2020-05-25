@@ -225,18 +225,6 @@ namespace wb {
             event.Scroll.X = xDelta;
             event.Scroll.Y = 0;
         } break;
-        case WM_SYSKEYDOWN:
-        case WM_KEYDOWN: {
-            u32 scancode = WindowsScancodeToWBScanCode(params.lParam, params.wParam);
-            event.Type = WB_EVENT_KEY_PRESSED;
-            event.Key.Code = scancode;
-        } break;
-        case WM_SYSKEYUP:
-        case WM_KEYUP: {
-            u32 scancode = WindowsScancodeToWBScanCode(params.lParam, params.wParam);
-            event.Type = WB_EVENT_KEY_RELEASED;
-            event.Key.Code = scancode;
-        } break;
         case WM_MOVE: {
             event.Type = WB_EVENT_WINDOW_EVENT;
             event.Window.Event = WB_WINDOWEVENT_MOVED;
@@ -385,8 +373,33 @@ namespace wb {
         MSG msg;
 
         while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            Event event;
+
+            switch (msg.message) {
+                case WM_SYSKEYDOWN:
+                case WM_KEYDOWN:
+                {
+                    u32 scancode = WindowsScancodeToWBScanCode(msg.lParam, msg.wParam);
+                    event.Type = WB_EVENT_KEY_PRESSED;
+                    event.Key.Code = scancode;
+                } break;
+                case WM_SYSKEYUP:
+                case WM_KEYUP:
+                {
+                    u32 scancode = WindowsScancodeToWBScanCode(msg.lParam, msg.wParam);
+                    event.Type = WB_EVENT_KEY_RELEASED;
+                    event.Key.Code = scancode;
+                } break;
+                default: {
+                    event.Type = WB_EVENT_NONE;
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
+            }
+
+            if (event.Type != WB_EVENT_NONE) {
+                eventCallback(event);
+            }
         }
     }
 
