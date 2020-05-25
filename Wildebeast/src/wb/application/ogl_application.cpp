@@ -1,6 +1,7 @@
 #include "wbpch.h"
-/*
+
 #include "wb/application/application.h"
+#ifdef WB_OGL
 #include "wb/events/event_router.h"
 
 #include <GL/glew.h>
@@ -127,7 +128,7 @@ namespace wb {
 
 			//--------------------------------------------
 			glUseProgram(shader_programme);
-			glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, glPtr(mvp));
+			glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, glPtr(mvp * ndc));
 			glBindVertexArray(vao);
 			// draw points 0-3 from the currently bound VAO with current in-use shader
 			glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -137,4 +138,4 @@ namespace wb {
         }
     }
 }
-*/
+#endif

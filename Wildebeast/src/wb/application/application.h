@@ -1,5 +1,9 @@
 #pragma once
 
+#if !defined(WB_VULKAN) && !defined(WB_DXX12) && !defined(WB_OGL)
+#define WB_VULKAN
+#endif
+
 #include "wb/core/core.h"
 #include "wb/core/platform.h"
 #include "wb/application/window.h"
@@ -7,18 +11,19 @@
 #include "wb/graphics/device_context.h"
 #include "wb/math/math.h"
 
+#ifdef WB_OGL
 // ogl
-//#include <GL/glew.h>
-
+#include <GL/glew.h>
+#elif defined(WB_DX12)
 // d3d12
-//#include <d3dx12.h>
-//#include <dxgi1_5.h>
-
+#include <d3dx12.h>
+#include <dxgi1_5.h>
+#elif defined(WB_VULKAN)
 // vulkan
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_sdk_platform.h>
-
+#endif
 namespace wb {
 	struct Vertex {
 		fvec3 pos;
@@ -49,20 +54,29 @@ namespace wb {
 			Window* window;
 			DeviceContext* graphicsContext;
 
-			// NOTE(Chris): TEMP for ogl triangle demo
-			u32 shader_programme;
-			i32 mvp_loc;
+			fmat4 ndc = {
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			};
+
 			fmat4 mvp = {
 				1.0f, 0.0f, 0.0f, 0.0f,
 				0.0f, 1.0f, 0.0f, 0.0f,
 				0.0f, 0.0f, 1.0f, 0.0f,
 				0.0f, 0.0f, 0.0f, 1.0f
 			};
-			u32 vao;
 			i64 t = 0;
+#ifdef WB_OGL
+			// NOTE(Chris): TEMP for ogl triangle demo
+			u32 shader_programme;
+			i32 mvp_loc;
 
-			// NOTE(Chris): TEMP for d3d12 triangle demo
-			/*IDXGIFactory5* factory;
+			u32 vao;
+
+#elif defined(WB_DX12)
+			IDXGIFactory5* factory;
 			IDXGIAdapter1* adapter;
 			ID3D12Debug* debugController;
 			ID3D12Device* device;
@@ -84,9 +98,9 @@ namespace wb {
 			ID3D12PipelineState* pipelineState;
 
 			ID3D12Resource* vertexBuffer;
-			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;*/
+			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
-			// NOTE(Chris): TEMP for vulkan triangle demo
+#elif defined(WB_VULKAN)
 			VkInstance instance;
 			VkDebugUtilsMessengerEXT debugMessenger;
 			VkPhysicalDevice physicalDevice;
@@ -115,6 +129,7 @@ namespace wb {
 			std::vector<VkDeviceMemory> uniformBuffersMemory;
 			VkDescriptorPool descriptorPool;
 			std::vector<VkDescriptorSet> descriptorSets;
+#endif
 	};
 }
 
