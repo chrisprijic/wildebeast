@@ -2,9 +2,13 @@
 
 #include "wb/core/types.h"
 
+// for vulkan
+#define COLUMN_MAJOR
+
 namespace wb {
-//#define COLUMN_MAJOR //-- define this if you want to use it.
+#if !defined(ROW_MAJOR) && !defined(COLUMN_MAJOR)
 #define ROW_MAJOR
+#endif
 
 	template<typename T>
 	union mat2 {

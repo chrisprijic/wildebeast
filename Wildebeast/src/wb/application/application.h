@@ -29,6 +29,10 @@ namespace wb {
 		fmat4 MVP;
 	};
 
+	struct UBO {
+		fmat4 MVP;
+	};
+
     class Application {
         public:
             Application();
@@ -96,6 +100,7 @@ namespace wb {
 			std::vector<VkImageView> RTVs;
 			std::vector<VkFramebuffer> RTVFBs;
 			VkFormat rtvFormat;
+			VkDescriptorSetLayout descriptorSetLayout;
 			VkPipelineLayout pipelineLayout;
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
@@ -106,6 +111,10 @@ namespace wb {
 			u32 frameIndex = 0;
 			VkBuffer vertexBuffer;
 			VkDeviceMemory vertexBufferMemory;
+			std::vector<VkBuffer> uniformBuffers;
+			std::vector<VkDeviceMemory> uniformBuffersMemory;
+			VkDescriptorPool descriptorPool;
+			std::vector<VkDescriptorSet> descriptorSets;
 	};
 }
 
