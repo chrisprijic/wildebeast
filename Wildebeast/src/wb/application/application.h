@@ -104,6 +104,8 @@ namespace wb {
 			VkSemaphore imageAvailableSemaphore;
 			VkSemaphore renderFinishedSemaphore;
 			u32 frameIndex = 0;
+			VkBuffer vertexBuffer;
+			VkDeviceMemory vertexBufferMemory;
 	};
 }
 
