@@ -11,8 +11,9 @@ namespace wb {
 
         void Init();
         void OnUpdate();
-        void OnEvent(Event& e);
+        bool OnEvent(Event& e);
     private:
         Window* window;
+        bool init = false;
     };
 }

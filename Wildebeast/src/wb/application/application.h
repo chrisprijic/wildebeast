@@ -71,6 +71,7 @@ namespace wb {
 				0.0f, 0.0f, 0.0f, 1.0f
 			};
 			i64 t = 0;
+			bool init = false;
 #ifdef WB_OGL
 			// NOTE(Chris): TEMP for ogl triangle demo
 			u32 shader_programme;

@@ -94,12 +94,15 @@ namespace wb {
 		mvp_loc = glGetUniformLocation(shader_programme, "mvp");
 		mvp = fmat4{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 		t = 0;
+
+		init = true;
     }
 
 
     Application::~Application() {}
 
-    void Application::OnEvent(Event& e) {}
+    void Application::OnEvent(Event& e) {
+	}
 
     void Application::onEvent(Event& e) {
         switch (e.Type) {
@@ -107,7 +110,11 @@ namespace wb {
                 closeWindow();
             } break;
             default: {
-                OnEvent(e);
+				if (init) {
+					bool handled = editor->OnEvent(e);
+					if (!handled)
+						OnEvent(e);
+				}
             }
         }
     }

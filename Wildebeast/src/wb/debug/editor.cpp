@@ -19,11 +19,12 @@ namespace wb {
     void Editor::Init() {
         ImGui::CreateContext();
         ImGui::StyleColorsDark();
-        ImGuiIO& io = ImGui::GetIO(); (void) io;
+        ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
         ImGui_ImplWin32_Init(window->GetNativeWindow());
         ImGui_ImplOpenGL3_Init("#version 410");
+        init = true;
     }
 
     void Editor::OnUpdate() {
@@ -38,7 +39,38 @@ namespace wb {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    void Editor::OnEvent(Event& e) {
+    bool Editor::OnEvent(Event& e) {
+        if (!init) return false;
 
+        ImGuiIO& io = ImGui::GetIO();
+        
+        switch (e.Type) {
+            case WB_EVENT_MOUSE_PRESSED:
+            {
+                int button = 0;
+                if (e.Button.Type == WB_MOUSEBUTTON_LEFT) { button = 0; }
+                if (e.Button.Type == WB_MOUSEBUTTON_RIGHT) { button = 1; }
+                if (e.Button.Type == WB_MOUSEBUTTON_MIDDLE ) { button = 2; }
+                if (e.Button.Type == WB_MOUSEBUTTON_X1) { button = 3; }
+                if (e.Button.Type == WB_MOUSEBUTTON_X2) { button = 4; }
+
+                io.MouseDown[button] = true;
+                return true;
+            } break;
+            case WB_EVENT_MOUSE_RELEASED: {
+                int button = 0;
+                if (e.Button.Type == WB_MOUSEBUTTON_LEFT) { button = 0; }
+                if (e.Button.Type == WB_MOUSEBUTTON_RIGHT) { button = 1; }
+                if (e.Button.Type == WB_MOUSEBUTTON_MIDDLE) { button = 2; }
+                if (e.Button.Type == WB_MOUSEBUTTON_X1) { button = 3; }
+                if (e.Button.Type == WB_MOUSEBUTTON_X2) { button = 4; }
+
+                io.MouseDown[button] = false;
+                return true;
+            } break;
+            default: {
+                return false;
+            }
+        }
     }
 }
