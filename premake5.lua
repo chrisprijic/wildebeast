@@ -22,9 +22,11 @@ IncludeDir["spdlog"] = "Wildebeast/vendor/spdlog/include"
 IncludeDir["GLEW"] = "Wildebeast/vendor/GLEW/include"
 IncludeDir["d3dx12"] = "Wildebeast/vendor/d3dx12/include"
 IncludeDir["Vulkan"] = "$(VULKAN_SDK)/include"
+IncludeDir["ImGui"] = "Wildebeast/vendor/imgui"
 
 group "Dependencies"
     include "Wildebeast/vendor/GLEW"
+    include "Wildebeast/vendor/imgui"
 
 group ""
 
@@ -58,14 +60,16 @@ project "Wildebeast"
 		"%{prj.name}/src",
         "%{IncludeDir.spdlog}",	
         "%{IncludeDir.GLEW}",
-        "%{IncludeDir.Vulkan}"
+        "%{IncludeDir.Vulkan}",
+        "%{IncludeDir.ImGui}"
     }
 
     links
     {
         "GLEW",
 		"opengl32.lib",
-        "$(VULKAN_SDK)/lib/vulkan-1.lib"
+        "$(VULKAN_SDK)/lib/vulkan-1.lib",
+        "ImGui"
     }
 
     filter "system:windows"
@@ -119,9 +123,10 @@ project "Game"
     includedirs
     {
         "Wildebeast/src",
-        "Wildebeast/vendor",
 		"%{IncludeDir.spdlog}",
-        "%{IncludeDir.Vulkan}"
+        "%{IncludeDir.GLEW}",
+        "%{IncludeDir.Vulkan}",
+        "%{IncludeDir.ImGui}"
     }
 
     links

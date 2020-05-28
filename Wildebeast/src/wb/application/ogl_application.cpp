@@ -18,6 +18,9 @@ namespace wb {
         graphicsContext->Init();
         //graphicsContext->SetVSync(true);
 
+		editor = new Editor(window);
+		editor->Init();
+
 		glEnable(GL_DEPTH_TEST); // enable depth-testing
 		glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 
@@ -91,12 +94,15 @@ namespace wb {
 		mvp_loc = glGetUniformLocation(shader_programme, "mvp");
 		mvp = fmat4{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 		t = 0;
+
+		init = true;
     }
 
 
     Application::~Application() {}
 
-    void Application::OnEvent(Event& e) {}
+    void Application::OnEvent(Event& e) {
+	}
 
     void Application::onEvent(Event& e) {
         switch (e.Type) {
@@ -104,7 +110,11 @@ namespace wb {
                 closeWindow();
             } break;
             default: {
-                OnEvent(e);
+				if (init) {
+					bool handled = editor->OnEvent(e);
+					if (!handled)
+						OnEvent(e);
+				}
             }
         }
     }
@@ -134,6 +144,9 @@ namespace wb {
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			//--------------------------------------------
 			std::cout << '.';
+
+			editor->OnUpdate();
+
             graphicsContext->SwapBuffers();
         }
     }
