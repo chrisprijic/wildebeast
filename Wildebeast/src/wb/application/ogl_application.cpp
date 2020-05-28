@@ -18,6 +18,9 @@ namespace wb {
         graphicsContext->Init();
         //graphicsContext->SetVSync(true);
 
+		editor = new Editor(window);
+		editor->Init();
+
 		glEnable(GL_DEPTH_TEST); // enable depth-testing
 		glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 
@@ -134,6 +137,9 @@ namespace wb {
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			//--------------------------------------------
 			std::cout << '.';
+
+			editor->OnUpdate();
+
             graphicsContext->SwapBuffers();
         }
     }

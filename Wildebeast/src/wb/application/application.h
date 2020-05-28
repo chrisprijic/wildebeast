@@ -1,7 +1,7 @@
 #pragma once
 
-#if !defined(WB_VULKAN) && !defined(WB_DXX12) && !defined(WB_OGL)
-#define WB_VULKAN
+#if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
+#define WB_OGL
 #endif
 
 #include "wb/core/core.h"
@@ -13,7 +13,9 @@
 
 #ifdef WB_OGL
 // ogl
+#define IMGUI_IMPL_OPENGL_LOADER_GLEW
 #include <GL/glew.h>
+#include "wb/debug/editor.h"
 #elif defined(WB_DX12)
 // d3d12
 #include <d3dx12.h>
@@ -45,6 +47,7 @@ namespace wb {
 
 			void Run();
 			virtual void OnEvent(Event& e);
+			Window* GetWindow() { return window; };
 		private:
 			void closeWindow();
 			void onEvent(Event& e);
@@ -74,6 +77,8 @@ namespace wb {
 			i32 mvp_loc;
 
 			u32 vao;
+
+			Editor* editor;
 
 #elif defined(WB_DX12)
 			IDXGIFactory5* factory;

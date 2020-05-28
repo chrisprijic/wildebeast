@@ -279,8 +279,8 @@ namespace wb {
         memcpy(data, vertices.data(), (size_t) bufferInfo.size);
         vkUnmapMemory(device, vertexBufferMemory);
 
-        auto vertShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\vert.spv");
-        auto fragShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\frag.spv");
+        auto vertShaderCode = readFile("C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\vert.spv");
+        auto fragShaderCode = readFile("C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\frag.spv");
 
         VkShaderModuleCreateInfo vsCreateInfo{};
         vsCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
