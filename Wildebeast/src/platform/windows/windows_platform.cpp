@@ -124,6 +124,7 @@ namespace wb {
 
     u8 getInputChar(WPARAM wParam, bool plain) {
         if (plain) {
+            if (wParam == '\r') return '\n';
             return (char) wParam;
         }
     }
