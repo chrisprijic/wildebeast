@@ -25,6 +25,8 @@ namespace wb {
 
         virtual u32 GetWidth() const = 0;
         virtual u32 GetHeight() const = 0;
+        virtual u32 GetDrawWidth() const = 0;
+        virtual u32 GetDrawHeight() const = 0;
 
         // Window attributes
         virtual pvoid GetNativeWindow() const = 0;
