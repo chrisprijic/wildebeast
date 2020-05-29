@@ -10,6 +10,13 @@ namespace wb {
         u8  Code;
     } KeyboardEvent;
 
+    typedef struct TextEvent {
+        u32 Type;
+        u32 Timestamp;
+        u32 WindowID;
+        u8 Char;
+    } TextEvent;
+
     typedef struct MouseButtonEvent {
         u32 Type;
         u32 Timestamp;

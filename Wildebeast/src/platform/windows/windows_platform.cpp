@@ -122,6 +122,12 @@ namespace wb {
         return code;
     }
 
+    u8 getInputChar(WPARAM wParam, bool plain) {
+        if (plain) {
+            return (char) wParam;
+        }
+    }
+
     i16 normalizeL(i16 input) {
         if (abs(input) < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) {
             return 0;
@@ -390,6 +396,17 @@ namespace wb {
                     event.Type = WB_EVENT_KEY_RELEASED;
                     event.Key.Code = scancode;
                 } break;
+                case WM_CHAR:
+                case WM_SYSCHAR:
+                case WM_UNICHAR: {
+                    event.Type = WB_EVENT_TEXT_INPUT;
+                    const bool plain = (msg.message != WM_SYSCHAR);
+                    if (msg.message == WM_UNICHAR && msg.wParam == UNICODE_NOCHAR) {
+                        continue;
+                    }
+
+                    event.Text.Char = getInputChar(msg.wParam, plain);
+                } break;
                 default: {
                     event.Type = WB_EVENT_NONE;
                     TranslateMessage(&msg);
@@ -399,6 +416,12 @@ namespace wb {
 
             if (event.Type != WB_EVENT_NONE) {
                 eventCallback(event);
+            }
+
+            // To get WM_CHAR
+            if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
             }
         }
     }

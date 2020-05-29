@@ -15,6 +15,8 @@ namespace wb {
             
             u32 GetWidth() const override { return windowCtx.Width; }
             u32 GetHeight() const override { return windowCtx.Height; }
+            u32 GetDrawWidth() const override { RECT rect; ::GetClientRect(window, &rect); return rect.right - rect.left; }
+            u32 GetDrawHeight() const override { RECT rect; ::GetClientRect(window, &rect); return rect.bottom - rect.top; }
 
             virtual pvoid GetNativeWindow() const { return window; }
         private:

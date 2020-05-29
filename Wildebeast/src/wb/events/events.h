@@ -23,6 +23,7 @@ namespace wb {
         WB_EVENT_KEY_PRESSED			= 0x300,
         WB_EVENT_KEY_REPEAT,
         WB_EVENT_KEY_RELEASED,
+        WB_EVENT_TEXT_INPUT,
 
         // mouse events
         WB_EVENT_MOUSE_MOVED			= 0x400,
@@ -61,6 +62,7 @@ namespace wb {
         WindowEvent         Window;
         SysWinEvent         SysWin;
         KeyboardEvent		Key;
+        TextEvent           Text;
         MouseMoveEvent		Motion;
         MouseButtonEvent	Button;
         MouseScrollEvent	Scroll;
