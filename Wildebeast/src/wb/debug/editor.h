@@ -14,6 +14,5 @@ namespace wb {
         bool OnEvent(Event& e);
     private:
         Window* window;
-        bool init = false;
     };
 }

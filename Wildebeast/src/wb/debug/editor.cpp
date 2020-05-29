@@ -1,7 +1,6 @@
 #include "wbpch.h"
 #include "wb/debug/editor.h"
 
-#include "platform/windows/imgui_impl_win32.h"
 #include "platform/opengl/imgui_impl_opengl3.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -49,7 +48,6 @@ namespace wb {
         io.KeyMap[ImGuiKey_Z] = WB_KEYCODE_Z;
 
         ImGui_ImplOpenGL3_Init("#version 410");
-        init = true;
     }
 
     void Editor::OnUpdate() {
@@ -68,8 +66,6 @@ namespace wb {
     }
 
     bool Editor::OnEvent(Event& e) {
-        if (!init) return false;
-
         ImGuiIO& io = ImGui::GetIO();
         
         switch (e.Type) {
