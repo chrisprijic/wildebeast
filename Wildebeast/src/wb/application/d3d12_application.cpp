@@ -14,46 +14,17 @@ namespace wb {
 
         window = platform->NewWindow();
 
-        D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
-        debugController->EnableDebugLayer();
-        u32 dxgiFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+        renderDevice = RenderDevice::Create(WB_RENDERDEVICE_DIRECTX, window);
+        renderDevice->Init();
 
-        CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory));
-        for (UINT adapterIndex = 0;; adapterIndex++) {
-            if (DXGI_ERROR_NOT_FOUND == factory->EnumAdapters1(adapterIndex, &adapter)) {
-                break;
-            }
+        ID3D12Device* device = (ID3D12Device*)renderDevice->getNativeDevice();
 
-            if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr))) {
-                break;
-            }
-        }
+        swapChain = (IDXGISwapChain3*) renderDevice->CreateSwapChain();
 
-        D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
-
-        D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
-        device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&cmdQueue));
-
-        device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAllocator));
-
-        device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocator, nullptr, IID_PPV_ARGS(&cmdList));
+        cmdList = (ID3D12GraphicsCommandList*) renderDevice->CreateContext();
         cmdList->Close();
 
-        IDXGISwapChain1* tempSwapChain;
-        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-        swapChainDesc.Width = 1280;
-        swapChainDesc.Height = 720;
-        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount = 2;
-        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapChainDesc.SampleDesc.Count = 1;
-        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        factory->CreateSwapChainForHwnd(cmdQueue, (HWND) window->GetNativeWindow(), &swapChainDesc, nullptr, nullptr, &tempSwapChain);
-        swapChain = (IDXGISwapChain3*) tempSwapChain;
-
         frameIndex = swapChain->GetCurrentBackBufferIndex();
-
 
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
         rtvHeapDesc.NumDescriptors = 2;
@@ -98,12 +69,12 @@ namespace wb {
         ID3DBlob* vertexShader;
         ID3DBlob* pixelShader;
 
-        HRESULT hr = D3DCompileFromFile(L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\vertex.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vertexShader, &error);
+        HRESULT hr = D3DCompileFromFile((projectDir + (L"\\assets\\vertex.hlsl")).c_str() , nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vertexShader, &error);
         if (FAILED(hr)) {
             OutputDebugStringA((char*) error->GetBufferPointer());
         }
 
-        hr = D3DCompileFromFile(L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\pixel.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &pixelShader, &error);
+        hr = D3DCompileFromFile((projectDir + (L"\\assets\\pixel.hlsl")).c_str(), nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &pixelShader, &error);
         if (FAILED(hr)) {
             OutputDebugStringA((char*) error->GetBufferPointer());
         }
@@ -207,7 +178,7 @@ namespace wb {
             mvp.m42 = sin(t / 1000.0);
 
             const u64 cFence = fenceValue;
-            cmdQueue->Signal(fence, cFence);
+            renderDevice->SignalFence(fence, cFence);
             fenceValue++;
 
             if (fence->GetCompletedValue() < cFence) {
@@ -215,8 +186,7 @@ namespace wb {
                 WaitForSingleObject(fenceEvent, INFINITE);
             }
 
-            cmdAllocator->Reset();
-            cmdList->Reset(cmdAllocator, pipelineState);
+            renderDevice->ResetContext(cmdList);
 
             cmdList->SetGraphicsRootSignature(rootSig);
             cmdList->SetPipelineState(pipelineState);
@@ -259,8 +229,7 @@ namespace wb {
             cmdList->ResourceBarrier(1, &barrier);
             cmdList->Close();
 
-            ID3D12CommandList* ppCmdLists[] = { cmdList };
-            cmdQueue->ExecuteCommandLists(_countof(ppCmdLists), ppCmdLists);
+            renderDevice->Dispatch(cmdList);
 
 			std::cout << '.';
 
