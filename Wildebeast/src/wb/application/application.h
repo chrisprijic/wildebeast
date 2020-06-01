@@ -1,7 +1,7 @@
 #pragma once
 
 #if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
-#define WB_DX12
+#define WB_OGL
 #endif
 
 #include "wb/core/core.h"

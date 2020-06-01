@@ -1,7 +1,7 @@
 #pragma once
 
-#include "wb/core/types.h";
-#include "wb/application/window.h";
+#include "wb/core/types.h"
+#include "wb/application/window.h"
 
 namespace wb {
     enum RENDERDEVICE_TYPE {
