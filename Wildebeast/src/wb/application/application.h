@@ -1,7 +1,7 @@
 #pragma once
 
 #if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
-#define WB_OGL
+#define WB_VULKAN
 #endif
 
 #include "wb/core/core.h"
@@ -9,6 +9,7 @@
 #include "wb/application/window.h"
 #include "wb/events/events.h"
 #include "wb/graphics/device_context.h"
+#include "wb/graphics/render_device.h"
 #include "wb/math/math.h"
 
 #ifdef WB_OGL
@@ -72,6 +73,12 @@ namespace wb {
 			};
 			i64 t = 0;
 			bool init = false;
+
+			RenderDevice* renderDevice;
+
+			std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
+			//std::wstring projectDir = L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast";
+
 #ifdef WB_OGL
 			// NOTE(Chris): TEMP for ogl triangle demo
 			u32 shader_programme;
@@ -82,12 +89,6 @@ namespace wb {
 			Editor* editor;
 
 #elif defined(WB_DX12)
-			IDXGIFactory5* factory;
-			IDXGIAdapter1* adapter;
-			ID3D12Debug* debugController;
-			ID3D12Device* device;
-			ID3D12CommandQueue* cmdQueue;
-			ID3D12CommandAllocator* cmdAllocator;
 			ID3D12GraphicsCommandList* cmdList;
 			IDXGISwapChain3* swapChain;
 			ID3D12DescriptorHeap* rtvHeap;
@@ -107,24 +108,14 @@ namespace wb {
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 #elif defined(WB_VULKAN)
-			VkInstance instance;
-			VkDebugUtilsMessengerEXT debugMessenger;
-			VkPhysicalDevice physicalDevice;
-			std::vector<const char*> physicalDeviceExtensions;
-			u32 queueFamily = 0;
-			VkDevice device;
-			VkQueue queue;
-			VkSurfaceKHR surface;
 			VkSwapchainKHR swapChain;
 			std::vector<VkImage> swapChainImages;
 			std::vector<VkImageView> RTVs;
 			std::vector<VkFramebuffer> RTVFBs;
-			VkFormat rtvFormat;
 			VkDescriptorSetLayout descriptorSetLayout;
 			VkPipelineLayout pipelineLayout;
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
-			VkCommandPool commandPool;
 			std::vector<VkCommandBuffer> commandBuffers;
 			VkSemaphore imageAvailableSemaphore;
 			VkSemaphore renderFinishedSemaphore;

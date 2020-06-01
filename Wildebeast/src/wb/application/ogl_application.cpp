@@ -14,7 +14,10 @@ namespace wb {
 
         window = platform->NewWindow();
 
-        graphicsContext = DeviceContext::Create(WB_DEVICECONTEXT_OPENGL, window);
+		renderDevice = RenderDevice::Create(WB_RENDERDEVICE_OPENGL, window);
+		renderDevice->Init();
+
+		graphicsContext = (DeviceContext*) renderDevice->CreateContext();
         graphicsContext->Init();
         //graphicsContext->SetVSync(true);
 
