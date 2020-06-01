@@ -1,7 +1,7 @@
 #pragma once
 
 #if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
-#define WB_OGL
+#define WB_VULKAN
 #endif
 
 #include "wb/core/core.h"
@@ -108,24 +108,14 @@ namespace wb {
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 #elif defined(WB_VULKAN)
-			VkInstance instance;
-			VkDebugUtilsMessengerEXT debugMessenger;
-			VkPhysicalDevice physicalDevice;
-			std::vector<const char*> physicalDeviceExtensions;
-			u32 queueFamily = 0;
-			VkDevice device;
-			VkQueue queue;
-			VkSurfaceKHR surface;
 			VkSwapchainKHR swapChain;
 			std::vector<VkImage> swapChainImages;
 			std::vector<VkImageView> RTVs;
 			std::vector<VkFramebuffer> RTVFBs;
-			VkFormat rtvFormat;
 			VkDescriptorSetLayout descriptorSetLayout;
 			VkPipelineLayout pipelineLayout;
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
-			VkCommandPool commandPool;
 			std::vector<VkCommandBuffer> commandBuffers;
 			VkSemaphore imageAvailableSemaphore;
 			VkSemaphore renderFinishedSemaphore;

@@ -3,6 +3,7 @@
 #include "wb/application/application.h"
 #ifdef WB_DX12
 #include "wb/events/event_router.h"
+#include "platform/dx12/d3d12_render_device.h"
 
 #include <D3Dcompiler.h>
 
@@ -178,7 +179,7 @@ namespace wb {
             mvp.m42 = sin(t / 1000.0);
 
             const u64 cFence = fenceValue;
-            renderDevice->SignalFence(fence, cFence);
+            ((D3D12RenderDevice*)renderDevice)->SignalFence(fence, cFence);
             fenceValue++;
 
             if (fence->GetCompletedValue() < cFence) {
@@ -186,7 +187,7 @@ namespace wb {
                 WaitForSingleObject(fenceEvent, INFINITE);
             }
 
-            renderDevice->ResetContext(cmdList);
+            ((D3D12RenderDevice*) renderDevice)->ResetContext(cmdList);
 
             cmdList->SetGraphicsRootSignature(rootSig);
             cmdList->SetPipelineState(pipelineState);

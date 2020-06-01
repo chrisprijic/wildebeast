@@ -2,6 +2,7 @@
 #include "wb/graphics/render_device.h"
 #include "platform/dx12/d3d12_render_device.h"
 #include "platform/opengl/ogl_render_device.h"
+#include "platform/vulkan/vulkan_render_device.h"
 
 namespace wb {
     RenderDevice* RenderDevice::Create(RENDERDEVICE_TYPE type, Window* window) {
@@ -13,7 +14,7 @@ namespace wb {
             return new D3D12RenderDevice(window);
         } break;
         case WB_RENDERDEVICE_VULKAN: {
-            return nullptr;
+            return new VulkanRenderDevice(window);
         } break;
         default:
             WB_CORE_ERROR("Render Device is not supported!");

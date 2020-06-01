@@ -17,9 +17,7 @@ namespace wb {
         virtual void Init() = 0;
         virtual pvoid CreateSwapChain() = 0;
         virtual void Dispatch(pvoid cmdList) = 0;
-        virtual void SignalFence(pvoid fence, u64 fenceValue) = 0;
         virtual pvoid CreateContext() = 0;
-        virtual void ResetContext(pvoid context) = 0;
         virtual pvoid getNativeDevice() = 0;
     
         static RenderDevice* Create(RENDERDEVICE_TYPE type, Window* window);

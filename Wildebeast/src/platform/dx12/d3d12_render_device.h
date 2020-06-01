@@ -14,10 +14,11 @@ namespace wb {
         void Init() override;
         pvoid CreateSwapChain() override;
         virtual void Dispatch(pvoid cmdList) override;
-        virtual void SignalFence(pvoid fence, u64 fenceValue) override;
         virtual pvoid CreateContext() override;
-        virtual void ResetContext(pvoid context) override;
         virtual pvoid getNativeDevice() override;
+
+        void SignalFence(pvoid fence, u64 fenceValue);
+        void ResetContext(pvoid context);
     private:
         WindowsWindow* window;
         

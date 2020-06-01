@@ -24,20 +24,11 @@ namespace wb {
         WB_CORE_ERROR("OGL TRYING TO DISPATCH COMMAND LIST: not supported");
     }
 
-    void WindowsOGLRenderDevice::SignalFence(pvoid fence, u64 fenceValue) {
-        //TODO(Chris): support in future
-    }
-
     pvoid WindowsOGLRenderDevice::CreateContext() {
         return new WindowsOGLDeviceContext(window);
-    }
-
-    void WindowsOGLRenderDevice::ResetContext(pvoid context) {
-        WB_CORE_ERROR("OGL TRYING TO RESET CONTEXT: not supported");
     }
 
     pvoid WindowsOGLRenderDevice::getNativeDevice() {
         return nullptr;
     }
-
 }
