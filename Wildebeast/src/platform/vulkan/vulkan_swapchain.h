@@ -15,6 +15,8 @@ namespace wb {
         virtual u32 GetBackBufferCount() override;
 
         pvoid getNativeSwapchain() { return swapchain; }
+
+        // TODO(Chris): need a better spot for these...
         pvoid getNativeSignalSemaphore();
         pvoid getNativeWaitSemaphore();
     private:
