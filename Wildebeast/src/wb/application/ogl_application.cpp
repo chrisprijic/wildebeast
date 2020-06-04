@@ -17,6 +17,8 @@ namespace wb {
 		renderDevice = RenderDevice::Create(WB_RENDERDEVICE_OPENGL, window);
 		renderDevice->Init();
 
+		swapchain = renderDevice->CreateSwapchain();
+
 		graphicsContext = (DeviceContext*) renderDevice->CreateContext();
         graphicsContext->Init();
         //graphicsContext->SetVSync(true);
@@ -128,6 +130,9 @@ namespace wb {
 
     void Application::Run() {
 		while (isRunning) {
+			
+			frameIndex = swapchain->GetBackBufferIndex();
+
 			t++;
 			platform->OnUpdate();
 
@@ -150,7 +155,7 @@ namespace wb {
 
 			editor->OnUpdate();
 
-            graphicsContext->SwapBuffers();
+            swapchain->Present(false);
         }
     }
 }

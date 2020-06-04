@@ -1,7 +1,7 @@
 #pragma once
 
 #if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
-#define WB_VULKAN
+#define WB_OGL
 #endif
 
 #include "wb/core/core.h"
@@ -84,6 +84,7 @@ namespace wb {
 			// NOTE(Chris): TEMP for ogl triangle demo
 			u32 shader_programme;
 			i32 mvp_loc;
+			u32 frameIndex = 0;
 
 			u32 vao;
 
@@ -116,7 +117,6 @@ namespace wb {
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
 			std::vector<VkCommandBuffer> commandBuffers;
-			u32 frameIndex = 0;
 			VkBuffer vertexBuffer;
 			VkDeviceMemory vertexBufferMemory;
 			std::vector<VkBuffer> uniformBuffers;

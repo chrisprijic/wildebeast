@@ -1,10 +1,11 @@
 #include "wbpch.h"
 #include "platform/windows/windows_ogl_render_device.h"
-#include "platform/windows/windows_ogl_device_context.h"
+#include "platform/opengl/ogl_swapchain.h"
 
 namespace wb {
     WindowsOGLRenderDevice::WindowsOGLRenderDevice(WindowsWindow* window) {
         this->window = window;
+        this->deviceContext = new WindowsOGLDeviceContext(window);
     }
 
     WindowsOGLRenderDevice::~WindowsOGLRenderDevice() {
@@ -16,8 +17,7 @@ namespace wb {
     }
 
     Swapchain* WindowsOGLRenderDevice::CreateSwapchain() {
-        WB_CORE_ERROR("OGL TRYING TO CREATE SWAP CHAIN: not supported");
-        return nullptr;
+        return new OGLSwapchain(deviceContext);
     }
 
     void WindowsOGLRenderDevice::Dispatch(pvoid cmdList) {
@@ -25,7 +25,7 @@ namespace wb {
     }
 
     pvoid WindowsOGLRenderDevice::CreateContext() {
-        return new WindowsOGLDeviceContext(window);
+        return this->deviceContext;
     }
 
     pvoid WindowsOGLRenderDevice::getNativeDevice() {

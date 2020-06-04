@@ -405,8 +405,6 @@ namespace wb {
         for (u32 i = 0; i < commandBuffers.size(); i++) {
             commandBuffers[i] = (VkCommandBuffer) renderDevice->CreateContext();
         }
-
-        frameIndex = 0;// swapChain.GetCurrentBackBufferIndex();
     }
 
 
