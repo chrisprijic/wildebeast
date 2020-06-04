@@ -20,12 +20,10 @@ namespace wb {
 
         ID3D12Device* device = (ID3D12Device*)renderDevice->getNativeDevice();
 
-        swapChain = (IDXGISwapChain3*) renderDevice->CreateSwapChain();
+        swapchain = renderDevice->CreateSwapchain();
 
         cmdList = (ID3D12GraphicsCommandList*) renderDevice->CreateContext();
         cmdList->Close();
-
-        frameIndex = swapChain->GetCurrentBackBufferIndex();
 
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
         rtvHeapDesc.NumDescriptors = 2;
@@ -37,7 +35,7 @@ namespace wb {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
         for (u32 n = 0; n < 2; n++) {
-            swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n]));
+            renderTargets[n] = (ID3D12Resource*)swapchain->GetBuffer(n);
             device->CreateRenderTargetView(renderTargets[n], nullptr, rtvHandle);
             rtvHandle.Offset(1, heapStepSize);
         }
@@ -172,6 +170,7 @@ namespace wb {
 
     void Application::Run() {
 		while (isRunning) {
+            frameIndex = swapchain->GetBackBufferIndex();
 			t++;
 			platform->OnUpdate();
 
@@ -234,9 +233,7 @@ namespace wb {
 
 			std::cout << '.';
 
-            swapChain->Present(0, 0);
-
-            frameIndex = swapChain->GetCurrentBackBufferIndex();
+            swapchain->Present(false);
         }
     }
 }
