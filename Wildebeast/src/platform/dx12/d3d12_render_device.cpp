@@ -34,7 +34,7 @@ namespace wb {
         device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAllocator));
     }
 
-    pvoid D3D12RenderDevice::CreateSwapChain() {
+    Swapchain* D3D12RenderDevice::CreateSwapchain() {
         IDXGISwapChain1* tempSwapChain;
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
         swapChainDesc.Width = 1280;
@@ -46,7 +46,7 @@ namespace wb {
         swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
         factory->CreateSwapChainForHwnd(cmdQueue, (HWND) window->GetNativeWindow(), &swapChainDesc, nullptr, nullptr, &tempSwapChain);
-        return tempSwapChain;
+        return (Swapchain*)tempSwapChain;
     }
 
     void D3D12RenderDevice::Dispatch(pvoid cmdList) {

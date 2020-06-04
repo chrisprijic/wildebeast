@@ -4,6 +4,7 @@
 #ifdef WB_VULKAN
 #include "wb/events/event_router.h"
 #include "platform/vulkan/vulkan_render_device.h"
+#include "platform/vulkan/vulkan_swapchain.h"
 
 #include <fstream>
 
@@ -37,24 +38,19 @@ namespace wb {
 
         renderDevice = RenderDevice::Create(WB_RENDERDEVICE_VULKAN, window);
         renderDevice->Init();
-        swapChain = (VkSwapchainKHR) renderDevice->CreateSwapChain();
+        swapchain = renderDevice->CreateSwapchain();
         VkDevice device = (VkDevice) renderDevice->getNativeDevice();
         VkPhysicalDevice physicalDevice = (VkPhysicalDevice) ((VulkanRenderDevice*) renderDevice)->getNativePhysicalDevice();
 
-        u32 imageCount = 0;
-        HRESULT result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
-        swapChainImages.resize(imageCount);
-        RTVs.resize(imageCount);
-        result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
 
-        VkFormat rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;
+        RTVs.resize(swapchain->GetBackBufferCount());
 
-        for (u32 i = 0; i < swapChainImages.size(); i++) {
+        for (u32 i = 0; i < RTVs.size(); i++) {
             VkImageViewCreateInfo imageViewCreateInfo{};
             imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            imageViewCreateInfo.image = swapChainImages[i];
+            imageViewCreateInfo.image = (VkImage)swapchain->GetBuffer(i);
             imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            imageViewCreateInfo.format = rtvFormat;
+            imageViewCreateInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
             imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
             imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
             imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -64,7 +60,7 @@ namespace wb {
             imageViewCreateInfo.subresourceRange.levelCount = 1;
             imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
             imageViewCreateInfo.subresourceRange.layerCount = 1;
-            result = vkCreateImageView(device, &imageViewCreateInfo, nullptr, &RTVs[i]);
+            vkCreateImageView(device, &imageViewCreateInfo, nullptr, &RTVs[i]);
         }
 
         const std::vector<Vertex> vertices = {
@@ -243,10 +239,10 @@ namespace wb {
 
         VkDeviceSize bufferSize = sizeof(UBO);
 
-        uniformBuffers.resize(swapChainImages.size());
-        uniformBuffersMemory.resize(swapChainImages.size());
+        uniformBuffers.resize(swapchain->GetBackBufferCount());
+        uniformBuffersMemory.resize(swapchain->GetBackBufferCount());
 
-        for (size_t i = 0; i < swapChainImages.size(); i++) {
+        for (size_t i = 0; i < swapchain->GetBackBufferCount(); i++) {
             VkBufferCreateInfo bufferInfo{};
             bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             bufferInfo.size = bufferSize;
@@ -280,27 +276,27 @@ namespace wb {
 
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = static_cast<u32>(swapChainImages.size());
+        poolSize.descriptorCount = static_cast<u32>(swapchain->GetBackBufferCount());
 
         VkDescriptorPoolCreateInfo descPoolInfo{};
         descPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descPoolInfo.poolSizeCount = 1;
         descPoolInfo.pPoolSizes = &poolSize;
-        descPoolInfo.maxSets = static_cast<u32>(swapChainImages.size());
+        descPoolInfo.maxSets = static_cast<u32>(swapchain->GetBackBufferCount());
         
         vkCreateDescriptorPool(device, &descPoolInfo, nullptr, &descriptorPool);
 
-        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(swapchain->GetBackBufferCount(), descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocDSInfo{};
         allocDSInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocDSInfo.descriptorPool = descriptorPool;
-        allocDSInfo.descriptorSetCount = static_cast<u32>(swapChainImages.size());
+        allocDSInfo.descriptorSetCount = static_cast<u32>(swapchain->GetBackBufferCount());
         allocDSInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(swapChainImages.size());
+        descriptorSets.resize(swapchain->GetBackBufferCount());
         vkAllocateDescriptorSets(device, &allocDSInfo, descriptorSets.data());
 
-        for (size_t i = 0; i < swapChainImages.size(); i++) {
+        for (size_t i = 0; i < swapchain->GetBackBufferCount(); i++) {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffers[i];
             bufferInfo.offset = 0;
@@ -325,10 +321,10 @@ namespace wb {
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-        result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
+        HRESULT result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
 
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = rtvFormat;
+        colorAttachment.format = VK_FORMAT_B8G8R8A8_SRGB;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -410,12 +406,6 @@ namespace wb {
             commandBuffers[i] = (VkCommandBuffer) renderDevice->CreateContext();
         }
 
-        VkSemaphoreCreateInfo semaphoreInfo{};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphore);
-        vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphore);
-
         frameIndex = 0;// swapChain.GetCurrentBackBufferIndex();
     }
 
@@ -451,7 +441,7 @@ namespace wb {
 
             VkDevice device = (VkDevice) renderDevice->getNativeDevice();
 
-            vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
+            frameIndex = swapchain->GetBackBufferIndex();
 
             UBO ubo = { mvp * ndc };
 
@@ -495,14 +485,14 @@ namespace wb {
             VkSubmitInfo submitInfo{};
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-            VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
+            VkSemaphore waitSemaphores[] = { (VkSemaphore)((VulkanSwapchain*)swapchain)->getNativeWaitSemaphore() };
             VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
             submitInfo.waitSemaphoreCount = 1;
             submitInfo.pWaitSemaphores = waitSemaphores;
             submitInfo.pWaitDstStageMask = waitStages;
             submitInfo.commandBufferCount = 1;
             submitInfo.pCommandBuffers = &commandBuffers[frameIndex];
-            VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
+            VkSemaphore signalSemaphores[] = { (VkSemaphore)((VulkanSwapchain*) swapchain)->getNativeSignalSemaphore() };
             submitInfo.signalSemaphoreCount = 1;
             submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -510,20 +500,7 @@ namespace wb {
 
             std::cout << '.';
 
-            VkPresentInfoKHR presentInfo{};
-            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-            presentInfo.waitSemaphoreCount = 1;
-            presentInfo.pWaitSemaphores = signalSemaphores;
-            VkSwapchainKHR swapChains[] = { swapChain };
-            presentInfo.swapchainCount = 1;
-            presentInfo.pSwapchains = swapChains;
-            presentInfo.pImageIndices = &frameIndex;
-            presentInfo.pResults = nullptr; // Optional
-
-            VkQueue queue = (VkQueue)((VulkanRenderDevice*)renderDevice)->getNativeCommandQueue();
-
-            vkQueuePresentKHR(queue, &presentInfo);
+            swapchain->Present(false);
         }
     }
 }

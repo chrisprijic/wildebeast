@@ -15,7 +15,7 @@ namespace wb {
         // TODO(Chris): do we have any prep we need to do atm?
     }
 
-    pvoid WindowsOGLRenderDevice::CreateSwapChain() {
+    Swapchain* WindowsOGLRenderDevice::CreateSwapchain() {
         WB_CORE_ERROR("OGL TRYING TO CREATE SWAP CHAIN: not supported");
         return nullptr;
     }

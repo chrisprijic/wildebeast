@@ -75,6 +75,7 @@ namespace wb {
 			bool init = false;
 
 			RenderDevice* renderDevice;
+			Swapchain* swapchain;
 
 			std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
 			//std::wstring projectDir = L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast";
@@ -108,8 +109,6 @@ namespace wb {
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 #elif defined(WB_VULKAN)
-			VkSwapchainKHR swapChain;
-			std::vector<VkImage> swapChainImages;
 			std::vector<VkImageView> RTVs;
 			std::vector<VkFramebuffer> RTVFBs;
 			VkDescriptorSetLayout descriptorSetLayout;
@@ -117,8 +116,6 @@ namespace wb {
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
 			std::vector<VkCommandBuffer> commandBuffers;
-			VkSemaphore imageAvailableSemaphore;
-			VkSemaphore renderFinishedSemaphore;
 			u32 frameIndex = 0;
 			VkBuffer vertexBuffer;
 			VkDeviceMemory vertexBufferMemory;

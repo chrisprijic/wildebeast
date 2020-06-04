@@ -2,6 +2,7 @@
 
 #include "wb/core/types.h"
 #include "wb/application/window.h"
+#include "wb/graphics/swapchain.h"
 
 namespace wb {
     enum RENDERDEVICE_TYPE {
@@ -15,7 +16,7 @@ namespace wb {
     class RenderDevice {
     public:
         virtual void Init() = 0;
-        virtual pvoid CreateSwapChain() = 0;
+        virtual Swapchain* CreateSwapchain() = 0;
         virtual void Dispatch(pvoid cmdList) = 0;
         virtual pvoid CreateContext() = 0;
         virtual pvoid getNativeDevice() = 0;
