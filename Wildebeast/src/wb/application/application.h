@@ -1,7 +1,7 @@
 #pragma once
 
 #if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
-#define WB_VULKAN
+#define WB_DX12
 #endif
 
 #include "wb/core/core.h"
@@ -75,6 +75,8 @@ namespace wb {
 			bool init = false;
 
 			RenderDevice* renderDevice;
+			Swapchain* swapchain; 
+			u32 frameIndex = 0;
 
 			std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
 			//std::wstring projectDir = L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast";
@@ -83,17 +85,15 @@ namespace wb {
 			// NOTE(Chris): TEMP for ogl triangle demo
 			u32 shader_programme;
 			i32 mvp_loc;
-
+			
 			u32 vao;
 
 			Editor* editor;
 
 #elif defined(WB_DX12)
 			ID3D12GraphicsCommandList* cmdList;
-			IDXGISwapChain3* swapChain;
 			ID3D12DescriptorHeap* rtvHeap;
 			ID3D12DescriptorHeap* dsvHeap;
-			u32 frameIndex;
 			u32 heapStepSize;
 			ID3D12Resource* renderTargets[2];
 			ID3D12Resource* depthBuffer;
@@ -108,8 +108,6 @@ namespace wb {
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 #elif defined(WB_VULKAN)
-			VkSwapchainKHR swapChain;
-			std::vector<VkImage> swapChainImages;
 			std::vector<VkImageView> RTVs;
 			std::vector<VkFramebuffer> RTVFBs;
 			VkDescriptorSetLayout descriptorSetLayout;
@@ -117,9 +115,6 @@ namespace wb {
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
 			std::vector<VkCommandBuffer> commandBuffers;
-			VkSemaphore imageAvailableSemaphore;
-			VkSemaphore renderFinishedSemaphore;
-			u32 frameIndex = 0;
 			VkBuffer vertexBuffer;
 			VkDeviceMemory vertexBufferMemory;
 			std::vector<VkBuffer> uniformBuffers;

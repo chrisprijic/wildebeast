@@ -1,5 +1,6 @@
 #include "wbpch.h"
 #include "platform/vulkan/vulkan_render_device.h"
+#include "platform/vulkan/vulkan_swapchain.h"
 
 namespace wb {
 
@@ -178,32 +179,8 @@ namespace wb {
         vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
     }
 
-    pvoid VulkanRenderDevice::CreateSwapChain() {
-        VkSwapchainKHR swapChain;
-
-        VkFormat rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;
-
-        VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        HRESULT result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
-
-        VkSwapchainCreateInfoKHR swapChainCreateInfo{};
-        swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapChainCreateInfo.surface = surface;
-        swapChainCreateInfo.minImageCount = 2;
-        swapChainCreateInfo.imageFormat = rtvFormat;
-        swapChainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        swapChainCreateInfo.imageExtent = VkExtent2D{ 1264, 681 };
-        swapChainCreateInfo.imageArrayLayers = 1;
-        swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        swapChainCreateInfo.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-        swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapChainCreateInfo.clipped = VK_TRUE;
-        swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-        swapChainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
-
-        result = vkCreateSwapchainKHR(device, &swapChainCreateInfo, nullptr, &swapChain);
-
-        return swapChain;
+    Swapchain* VulkanRenderDevice::CreateSwapchain() {
+        return new VulkanSwapchain(physicalDevice, device, surface, queue);
     }
 
     void VulkanRenderDevice::Dispatch(pvoid cmdList) {

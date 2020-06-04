@@ -1,11 +1,8 @@
 #pragma once
 
+#include "platform/vulkan/base.h"
 #include "wb/graphics/render_device.h"
 #include "platform/windows/windows_window.h"
-
-#define VK_USE_PLATFORM_WIN32_KHR
-#include <vulkan/vulkan.h>
-#include <vulkan/vk_sdk_platform.h>
 
 namespace wb {
     class VulkanRenderDevice : public RenderDevice {
@@ -14,7 +11,7 @@ namespace wb {
 		~VulkanRenderDevice();
 
 		void Init() override;
-		pvoid CreateSwapChain() override;
+		Swapchain* CreateSwapchain() override;
 		virtual void Dispatch(pvoid cmdList) override;
 		virtual pvoid CreateContext() override;
 		virtual pvoid getNativeDevice() override;

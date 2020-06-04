@@ -1,10 +1,9 @@
 #pragma once
 
+#include "platform/dx12/base.h"
+
 #include "wb/graphics/render_device.h"
 #include "platform/windows/windows_window.h"
-
-#include <d3dx12.h>
-#include <dxgi1_5.h>
 
 namespace wb {
     class D3D12RenderDevice : public RenderDevice {
@@ -12,7 +11,7 @@ namespace wb {
         D3D12RenderDevice(Window* window);
         ~D3D12RenderDevice();
         void Init() override;
-        pvoid CreateSwapChain() override;
+        Swapchain* CreateSwapchain() override;
         virtual void Dispatch(pvoid cmdList) override;
         virtual pvoid CreateContext() override;
         virtual pvoid getNativeDevice() override;

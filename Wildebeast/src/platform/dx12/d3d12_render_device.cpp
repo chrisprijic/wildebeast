@@ -1,5 +1,6 @@
 #include "wbpch.h"
-#include "d3d12_render_device.h"
+#include "platform/dx12/d3d12_render_device.h"
+#include "platform/dx12/d3d12_swapchain.h"
 
 namespace wb {
     D3D12RenderDevice::D3D12RenderDevice(Window* window) {
@@ -34,19 +35,8 @@ namespace wb {
         device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAllocator));
     }
 
-    pvoid D3D12RenderDevice::CreateSwapChain() {
-        IDXGISwapChain1* tempSwapChain;
-        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-        swapChainDesc.Width = 1280;
-        swapChainDesc.Height = 720;
-        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount = 2;
-        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapChainDesc.SampleDesc.Count = 1;
-        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        factory->CreateSwapChainForHwnd(cmdQueue, (HWND) window->GetNativeWindow(), &swapChainDesc, nullptr, nullptr, &tempSwapChain);
-        return tempSwapChain;
+    Swapchain* D3D12RenderDevice::CreateSwapchain() {
+        return new D3D12Swapchain(factory, cmdQueue, (HWND) window->GetNativeWindow());
     }
 
     void D3D12RenderDevice::Dispatch(pvoid cmdList) {
