@@ -1,7 +1,7 @@
 #pragma once
 
-#if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
-#define WB_VULKAN
+#if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OPENGL)
+#define WB_OPENGL
 #endif
 
 #include "wb/core/core.h"
@@ -12,10 +12,11 @@
 #include "wb/graphics/render_device.h"
 #include "wb/math/math.h"
 
-#ifdef WB_OGL
+#ifdef WB_OPENGL
 // ogl
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 #include <GL/glew.h>
+#include "platform/opengl/ogl_context.h"
 #include "wb/debug/editor.h"
 #elif defined(WB_DX12)
 // d3d12
@@ -56,7 +57,6 @@ namespace wb {
 			bool isRunning = true;
 			Platform* platform;
 			Window* window;
-			DeviceContext* graphicsContext;
 
 			fmat4 ndc = {
 				1.0f, 0.0f, 0.0f, 0.0f,
@@ -81,13 +81,14 @@ namespace wb {
 			//std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
 			std::wstring projectDir = L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast";
 
-#ifdef WB_OGL
+#ifdef WB_OPENGL
 			// NOTE(Chris): TEMP for ogl triangle demo
 			u32 shader_programme;
 			i32 mvp_loc;
 			
 			u32 vao;
 
+			OGLContext* graphicsContext;
 			Editor* editor;
 
 #elif defined(WB_DX12)

@@ -1,7 +1,7 @@
 #include "wbpch.h"
 
 #include "wb/application/application.h"
-#ifdef WB_OGL
+#ifdef WB_OPENGL
 #include "wb/events/event_router.h"
 
 #include <GL/glew.h>
@@ -19,7 +19,7 @@ namespace wb {
 
 		swapchain = renderDevice->CreateSwapchain();
 
-		graphicsContext = (DeviceContext*) renderDevice->CreateContext();
+		graphicsContext = (OGLContext*) renderDevice->CreateContext();
         graphicsContext->Init();
         //graphicsContext->SetVSync(true);
 

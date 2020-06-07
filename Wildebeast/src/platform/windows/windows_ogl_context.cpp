@@ -1,11 +1,11 @@
 #include "wbpch.h"
-#include "platform/windows/windows_ogl_device_context.h"
+#include "platform/windows/windows_ogl_context.h"
 
 #include "GL/glew.h"
 #include "GL/wglew.h"
 
 namespace wb {
-    WindowsOGLDeviceContext::WindowsOGLDeviceContext(WindowsWindow* win) {
+    WindowsOGLContext::WindowsOGLContext(WindowsWindow* win) {
         window = (HWND)win->GetNativeWindow();
         hdc = GetDC(window);
         hrc = NULL;
@@ -13,12 +13,12 @@ namespace wb {
         glMin = 0;
     }
 
-    WindowsOGLDeviceContext::~WindowsOGLDeviceContext() {
+    WindowsOGLContext::~WindowsOGLContext() {
         ReleaseDC(window, hdc);
         wglDeleteContext(hrc);
     }
 
-    bool WindowsOGLDeviceContext::Init() {
+    bool WindowsOGLContext::Init() {
         PIXELFORMATDESCRIPTOR pfd;
         ZeroMemory(&pfd, sizeof(pfd));
 
@@ -99,18 +99,18 @@ namespace wb {
         return true;
     }
 
-    void WindowsOGLDeviceContext::SetVSync(bool enabled) {
+    void WindowsOGLContext::SetVSync(bool enabled) {
         if (wglSwapIntervalEXT != nullptr)
         {
             wglSwapIntervalEXT(enabled ? 1 : 0);
         }
     }
 
-    void WindowsOGLDeviceContext::SwapBuffers() {
+    void WindowsOGLContext::SwapBuffers() {
         ::SwapBuffers(hdc);
     }
 
-    void WindowsOGLDeviceContext::MakeCurrent() {
+    void WindowsOGLContext::MakeCurrent() {
         wglMakeCurrent(hdc, hrc);
     }
 }

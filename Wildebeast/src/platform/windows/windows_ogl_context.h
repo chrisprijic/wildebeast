@@ -1,13 +1,13 @@
 #pragma once
 
 #include "platform/windows/windows_window.h"
-#include "platform/opengl/ogl_device_context.h"
+#include "platform/opengl/ogl_context.h"
 
 namespace wb {
-    class WindowsOGLDeviceContext : public OGLDeviceContext {
+    class WindowsOGLContext : public OGLContext {
         public:
-            WindowsOGLDeviceContext(WindowsWindow* window);
-            ~WindowsOGLDeviceContext();
+            WindowsOGLContext(WindowsWindow* window);
+            ~WindowsOGLContext();
             bool Init();
             void SetVSync(bool enabled);
             void SwapBuffers();

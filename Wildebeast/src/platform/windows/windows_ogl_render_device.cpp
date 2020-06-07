@@ -5,7 +5,7 @@
 namespace wb {
     WindowsOGLRenderDevice::WindowsOGLRenderDevice(WindowsWindow* window) {
         this->window = window;
-        this->deviceContext = new WindowsOGLDeviceContext(window);
+        this->oglContext = new WindowsOGLContext(window);
     }
 
     WindowsOGLRenderDevice::~WindowsOGLRenderDevice() {
@@ -17,7 +17,7 @@ namespace wb {
     }
 
     Swapchain* WindowsOGLRenderDevice::CreateSwapchain() {
-        return new OGLSwapchain(deviceContext);
+        return new OGLSwapchain(oglContext);
     }
 
     void WindowsOGLRenderDevice::Dispatch(pvoid cmdList) {
@@ -25,7 +25,7 @@ namespace wb {
     }
 
     pvoid WindowsOGLRenderDevice::CreateContext() {
-        return this->deviceContext;
+        return this->oglContext;
     }
 
     pvoid WindowsOGLRenderDevice::getNativeDevice() {
