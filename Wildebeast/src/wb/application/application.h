@@ -1,7 +1,7 @@
 #pragma once
 
 #if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OGL)
-#define WB_DX12
+#define WB_VULKAN
 #endif
 
 #include "wb/core/core.h"
@@ -78,8 +78,8 @@ namespace wb {
 			Swapchain* swapchain; 
 			u32 frameIndex = 0;
 
-			std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
-			//std::wstring projectDir = L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast";
+			//std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
+			std::wstring projectDir = L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast";
 
 #ifdef WB_OGL
 			// NOTE(Chris): TEMP for ogl triangle demo
