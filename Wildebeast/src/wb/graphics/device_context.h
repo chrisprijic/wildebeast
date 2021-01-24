@@ -9,15 +9,12 @@ namespace wb {
         WB_DEVICECONTEXT_OPENGL
     };
 
-    class DeviceContext
+    class IDeviceContext
     {
     public:
         virtual bool Init() = 0;
         virtual void SetVSync(bool enabled) = 0;
         virtual void SwapBuffers() = 0;
         virtual void MakeCurrent() = 0;
-
-        static DeviceContext* Create(DEVICE_CONTEXT_TYPE type, Window* window);
     };
-
 }

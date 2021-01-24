@@ -13,5 +13,9 @@
     #error "Unsupported platform!"
 #endif
 
+#if !defined(WB_GRAPHICS_VULKAN) && !defined(WB_GRAPHICS_DX12) && !defined(WB_GRAPHICS_OPENGL)
+#define WB_GRAPHICS_VULKAN
+#endif
+
 #include "wb/core/macros.h"
 #include "wb/debug/debug.h"

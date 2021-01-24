@@ -1,9 +1,5 @@
 #pragma once
 
-#if !defined(WB_VULKAN) && !defined(WB_DX12) && !defined(WB_OPENGL)
-#define WB_OPENGL
-#endif
-
 #include "wb/core/core.h"
 #include "wb/core/platform.h"
 #include "wb/application/window.h"
@@ -22,7 +18,7 @@
 // d3d12
 #include <d3dx12.h>
 #include <dxgi1_5.h>
-#elif defined(WB_VULKAN)
+#elif defined(WB_GRAPHICS_VULKAN)
 // vulkan
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
@@ -74,8 +70,8 @@ namespace wb {
 			i64 t = 0;
 			bool init = false;
 
-			RenderDevice* renderDevice;
-			Swapchain* swapchain; 
+			//RenderDevice* renderDevice;
+			//Swapchain* swapchain; 
 			u32 frameIndex = 0;
 
 			//std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
@@ -108,14 +104,28 @@ namespace wb {
 			ID3D12Resource* vertexBuffer;
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
-#elif defined(WB_VULKAN)
+#elif defined(WB_GRAPHICS_VULKAN)
+			VkInstance instance;
+			VkDebugUtilsMessengerEXT debugMessenger;
+			VkPhysicalDevice physicalDevice;
+			std::vector<const char*> physicalDeviceExtensions;
+			u32 queueFamily = 0;
+			VkDevice device;
+			VkQueue queue;
+			VkSurfaceKHR surface;
+			VkSwapchainKHR swapChain;
+			std::vector<VkImage> swapChainImages;
 			std::vector<VkImageView> RTVs;
 			std::vector<VkFramebuffer> RTVFBs;
+			VkFormat rtvFormat;
 			VkDescriptorSetLayout descriptorSetLayout;
 			VkPipelineLayout pipelineLayout;
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
+			VkCommandPool commandPool;
 			std::vector<VkCommandBuffer> commandBuffers;
+			VkSemaphore imageAvailableSemaphore;
+			VkSemaphore renderFinishedSemaphore;
 			VkBuffer vertexBuffer;
 			VkDeviceMemory vertexBufferMemory;
 			std::vector<VkBuffer> uniformBuffers;
