@@ -58,58 +58,14 @@ namespace wb {
 
         VkEngine::CreateDeviceAndContext(&renderDevice, &deviceContext);
 
-        VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        surfaceCreateInfo.hwnd = (HWND) window->GetNativeWindow();
-        surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+        SwapchainDesc swapchainDesc;
+        swapchainDesc.Width = window->GetWidth();
+        swapchainDesc.Height = window->GetHeight();
+        swapchainDesc.IsPrimary = true;
 
-        VkResult result = vkCreateWin32SurfaceKHR(renderDevice->instance, &surfaceCreateInfo, nullptr, &surface);
+        VkEngine::CreateSwapchain(swapchainDesc, window->GetNativeWindow(), renderDevice, &swapchain);
 
-        rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;
-
-        VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice->physicalDevice, surface, &surfaceCapabilities);
-
-        VkSwapchainCreateInfoKHR swapChainCreateInfo{};
-        swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapChainCreateInfo.surface = surface;
-        swapChainCreateInfo.minImageCount = 2;
-        swapChainCreateInfo.imageFormat = rtvFormat;
-        swapChainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        swapChainCreateInfo.imageExtent = VkExtent2D{ 1264, 681 };
-        swapChainCreateInfo.imageArrayLayers = 1;
-        swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        swapChainCreateInfo.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-        swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapChainCreateInfo.clipped = VK_TRUE;
-        swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-        swapChainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
-
-        result = vkCreateSwapchainKHR(renderDevice->device, &swapChainCreateInfo, nullptr, &swapChain);
-
-        u32 imageCount = 0;
-        result = vkGetSwapchainImagesKHR(renderDevice->device, swapChain, &imageCount, nullptr);
-        swapChainImages.resize(imageCount);
-        RTVs.resize(imageCount);
-        result = vkGetSwapchainImagesKHR(renderDevice->device, swapChain, &imageCount, swapChainImages.data());
-
-        for (u32 i = 0; i < swapChainImages.size(); i++) {
-            VkImageViewCreateInfo imageViewCreateInfo{};
-            imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            imageViewCreateInfo.image = swapChainImages[i];
-            imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            imageViewCreateInfo.format = rtvFormat;
-            imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-            imageViewCreateInfo.subresourceRange.levelCount = 1;
-            imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-            imageViewCreateInfo.subresourceRange.layerCount = 1;
-            result = vkCreateImageView(renderDevice->device, &imageViewCreateInfo, nullptr, &RTVs[i]);
-        }
+        // RENDER DATA
 
         const std::vector<Vertex> vertices = {
             {{  0.00f,  0.25f,  0.0f }, { 1.0f, 0.0f, 0.0f}},
@@ -287,10 +243,10 @@ namespace wb {
 
         VkDeviceSize bufferSize = sizeof(UBO);
 
-        uniformBuffers.resize(swapChainImages.size());
-        uniformBuffersMemory.resize(swapChainImages.size());
+        uniformBuffers.resize(swapchain->swapchainImages.size());
+        uniformBuffersMemory.resize(swapchain->swapchainImages.size());
 
-        for (size_t i = 0; i < swapChainImages.size(); i++) {
+        for (size_t i = 0; i < swapchain->swapchainImages.size(); i++) {
             VkBufferCreateInfo bufferInfo{};
             bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             bufferInfo.size = bufferSize;
@@ -324,27 +280,27 @@ namespace wb {
 
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = static_cast<u32>(swapChainImages.size());
+        poolSize.descriptorCount = static_cast<u32>(swapchain->swapchainImages.size());
 
         VkDescriptorPoolCreateInfo descPoolInfo{};
         descPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descPoolInfo.poolSizeCount = 1;
         descPoolInfo.pPoolSizes = &poolSize;
-        descPoolInfo.maxSets = static_cast<u32>(swapChainImages.size());
+        descPoolInfo.maxSets = static_cast<u32>(swapchain->swapchainImages.size());
 
         vkCreateDescriptorPool(renderDevice->device, &descPoolInfo, nullptr, &descriptorPool);
 
-        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(swapchain->swapchainImages.size(), descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocDSInfo{};
         allocDSInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocDSInfo.descriptorPool = descriptorPool;
-        allocDSInfo.descriptorSetCount = static_cast<u32>(swapChainImages.size());
+        allocDSInfo.descriptorSetCount = static_cast<u32>(swapchain->swapchainImages.size());
         allocDSInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(swapChainImages.size());
+        descriptorSets.resize(swapchain->swapchainImages.size());
         vkAllocateDescriptorSets(renderDevice->device, &allocDSInfo, descriptorSets.data());
 
-        for (size_t i = 0; i < swapChainImages.size(); i++) {
+        for (size_t i = 0; i < swapchain->swapchainImages.size(); i++) {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffers[i];
             bufferInfo.offset = 0;
@@ -363,13 +319,6 @@ namespace wb {
 
             vkUpdateDescriptorSets(renderDevice->device, 1, &descriptorWrite, 0, nullptr);
         }
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-
-        result = vkCreatePipelineLayout(renderDevice->device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
 
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = rtvFormat;
@@ -407,7 +356,14 @@ namespace wb {
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        result = vkCreateRenderPass(renderDevice->device, &renderPassInfo, nullptr, &renderPass);
+        VkResult result = vkCreateRenderPass(renderDevice->device, &renderPassInfo, nullptr, &renderPass);
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+
+        result = vkCreatePipelineLayout(renderDevice->device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -429,11 +385,11 @@ namespace wb {
 
         result = vkCreateGraphicsPipelines(renderDevice->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 
-        RTVFBs.resize(RTVs.size());
+        RTVFBs.resize(swapchain->RTVs.size());
 
-        for (u32 i = 0; i < RTVs.size(); i++) {
+        for (u32 i = 0; i < swapchain->RTVs.size(); i++) {
             VkImageView attachments[] = {
-                RTVs[i]
+                swapchain->RTVs[i]
             };
 
             VkFramebufferCreateInfo framebufferInfo = {};
@@ -504,7 +460,7 @@ namespace wb {
             mvp.m41 = cosf(t / 1000.0f);
             mvp.m42 = sinf(t / 1000.0f);
 
-            vkAcquireNextImageKHR(renderDevice->device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
+            vkAcquireNextImageKHR(renderDevice->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
 
             UBO ubo = { mvp * ndc };
 
@@ -568,7 +524,7 @@ namespace wb {
 
             presentInfo.waitSemaphoreCount = 1;
             presentInfo.pWaitSemaphores = signalSemaphores;
-            VkSwapchainKHR swapChains[] = { swapChain };
+            VkSwapchainKHR swapChains[] = { swapchain->swapchain };
             presentInfo.swapchainCount = 1;
             presentInfo.pSwapchains = swapChains;
             presentInfo.pImageIndices = &frameIndex;

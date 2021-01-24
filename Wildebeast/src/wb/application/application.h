@@ -9,6 +9,7 @@
 #include "wb/math/math.h"
 #include "platform/vulkan/vk_render_device.h"
 #include "platform/vulkan/vk_device_context.h"
+#include "platform/vulkan/vk_swapchain.h"
 
 #ifdef WB_OPENGL
 // ogl
@@ -109,12 +110,9 @@ namespace wb {
 #elif defined(WB_GRAPHICS_VULKAN)
 			VkRenderDevice* renderDevice;
 			VkDeviceContext* deviceContext;
-			VkSurfaceKHR surface;
-			VkSwapchainKHR swapChain;
-			std::vector<VkImage> swapChainImages;
-			std::vector<VkImageView> RTVs;
+			VkSwapchain* swapchain;
 			std::vector<VkFramebuffer> RTVFBs;
-			VkFormat rtvFormat;
+			VkFormat rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;;
 			VkDescriptorSetLayout descriptorSetLayout;
 			VkPipelineLayout pipelineLayout;
 			VkRenderPass renderPass;

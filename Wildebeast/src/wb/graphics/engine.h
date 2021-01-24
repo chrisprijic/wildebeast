@@ -9,7 +9,7 @@ namespace wb {
     class Engine {
     public:
         static void CreateDeviceAndContext(IRenderDevice** ppRenderDevice, IDeviceContext** ppDeviceContext);
-        // static void CreateSwapchain(SwapchainDesc& swapchainDesc, ISwapchain** ppSwapchain);
+        //static void CreateSwapchain(SwapchainDesc& swapchainDesc, IRenderDevice* pRenderDevice, ISwapchain** ppSwapchain);
     };
 }
 
