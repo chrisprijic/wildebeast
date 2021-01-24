@@ -7,6 +7,8 @@
 #include "wb/graphics/device_context.h"
 #include "wb/graphics/render_device.h"
 #include "wb/math/math.h"
+#include "platform/vulkan/vk_render_device.h"
+#include "platform/vulkan/vk_device_context.h"
 
 #ifdef WB_OPENGL
 // ogl
@@ -105,13 +107,8 @@ namespace wb {
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 #elif defined(WB_GRAPHICS_VULKAN)
-			VkInstance instance;
-			VkDebugUtilsMessengerEXT debugMessenger;
-			VkPhysicalDevice physicalDevice;
-			std::vector<const char*> physicalDeviceExtensions;
-			u32 queueFamily = 0;
-			VkDevice device;
-			VkQueue queue;
+			VkRenderDevice* renderDevice;
+			VkDeviceContext* deviceContext;
 			VkSurfaceKHR surface;
 			VkSwapchainKHR swapChain;
 			std::vector<VkImage> swapChainImages;

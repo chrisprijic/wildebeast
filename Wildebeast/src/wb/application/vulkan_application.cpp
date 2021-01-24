@@ -3,6 +3,8 @@
 #include "wb/application/application.h"
 #ifdef WB_GRAPHICS_VULKAN
 #include "wb/events/event_router.h"
+#include "wb/graphics/types.h"
+#include "platform/vulkan/vk_engine.h"
 
 #include <fstream>
 
@@ -54,148 +56,19 @@ namespace wb {
 
         window = platform->NewWindow();
 
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Hello Triangle";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
-
-        const std::vector<const char*> validationLayers = {
-            "VK_LAYER_KHRONOS_validation"
-        };
-
-#ifdef WB_DEBUG
-        const bool enableValidationLayers = true;
-#else
-        const bool enableValidationLayers = false;
-#endif
-
-        u32 layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-        std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-
-        uint32_t extensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-        std::vector<VkExtensionProperties> extensions2(extensionCount);
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions2.data());
-
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-
-        std::vector<char*> extensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
-        if (enableValidationLayers) {
-            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        }
-
-        createInfo.enabledExtensionCount = static_cast<u32>(extensions.size());
-        createInfo.ppEnabledExtensionNames = extensions.data();
-
-        VkDebugUtilsMessengerCreateInfoEXT createDebugInfo{};
-        if (enableValidationLayers) {
-            createInfo.enabledLayerCount = static_cast<u32>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-
-            createDebugInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-            createDebugInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-            createDebugInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-            createDebugInfo.pfnUserCallback = debugCallback;
-            createDebugInfo.pUserData = nullptr; // Optional
-
-            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &createDebugInfo;
-
-        } else {
-            createInfo.enabledLayerCount = 0;
-        }
-
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
-
-        CreateDebugUtilsMessengerEXT(instance, &createDebugInfo, nullptr, &debugMessenger);
+        VkEngine::CreateDeviceAndContext(&renderDevice, &deviceContext);
 
         VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         surfaceCreateInfo.hwnd = (HWND) window->GetNativeWindow();
         surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 
-        result = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
-
-        u32 deviceCount = 0;
-        result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-        std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
-        result = vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
-        // for now, find discrete GPU rather than integrated graphics
-        for (VkPhysicalDevice physdev : physicalDevices) {
-            VkPhysicalDeviceProperties deviceProperties;
-            VkPhysicalDeviceFeatures deviceFeatures;
-            vkGetPhysicalDeviceProperties(physdev, &deviceProperties);
-            vkGetPhysicalDeviceFeatures(physdev, &deviceFeatures);
-
-            u32 extensionCount;
-            result = vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, nullptr);
-            std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-            result = vkEnumerateDeviceExtensionProperties(physdev, nullptr, &extensionCount, availableExtensions.data());
-
-            if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-                bool found = false;
-
-                for (VkExtensionProperties prop : availableExtensions) {
-                    if (strcmp(prop.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (found) {
-                    physicalDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-                    physicalDevice = physdev;
-                    break;
-                }
-            }
-        }
-
-        u32 queueFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
-        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
-
-        for (u32 i = 0; i < queueFamilies.size(); i++) {
-            VkBool32 presentSupport = false;
-            result = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
-            if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT && presentSupport) {
-                queueFamily = i;
-                break;
-            }
-        }
-
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        float queuePriority = 1.0f;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-
-        VkPhysicalDeviceFeatures deviceFeatures{};
-
-        VkDeviceCreateInfo deviceCreateInfo{};
-        deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
-        deviceCreateInfo.queueCreateInfoCount = 1;
-        deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-        deviceCreateInfo.enabledExtensionCount = static_cast<u32>(physicalDeviceExtensions.size());
-        deviceCreateInfo.ppEnabledExtensionNames = physicalDeviceExtensions.data();
-
-        result = vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
-        vkGetDeviceQueue(device, queueFamily, 0, &queue);
+        VkResult result = vkCreateWin32SurfaceKHR(renderDevice->instance, &surfaceCreateInfo, nullptr, &surface);
 
         rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;
 
         VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
+        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice->physicalDevice, surface, &surfaceCapabilities);
 
         VkSwapchainCreateInfoKHR swapChainCreateInfo{};
         swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -212,13 +85,13 @@ namespace wb {
         swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
         swapChainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
 
-        result = vkCreateSwapchainKHR(device, &swapChainCreateInfo, nullptr, &swapChain);
+        result = vkCreateSwapchainKHR(renderDevice->device, &swapChainCreateInfo, nullptr, &swapChain);
 
         u32 imageCount = 0;
-        result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+        result = vkGetSwapchainImagesKHR(renderDevice->device, swapChain, &imageCount, nullptr);
         swapChainImages.resize(imageCount);
         RTVs.resize(imageCount);
-        result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+        result = vkGetSwapchainImagesKHR(renderDevice->device, swapChain, &imageCount, swapChainImages.data());
 
         for (u32 i = 0; i < swapChainImages.size(); i++) {
             VkImageViewCreateInfo imageViewCreateInfo{};
@@ -235,7 +108,7 @@ namespace wb {
             imageViewCreateInfo.subresourceRange.levelCount = 1;
             imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
             imageViewCreateInfo.subresourceRange.layerCount = 1;
-            result = vkCreateImageView(device, &imageViewCreateInfo, nullptr, &RTVs[i]);
+            result = vkCreateImageView(renderDevice->device, &imageViewCreateInfo, nullptr, &RTVs[i]);
         }
 
         const std::vector<Vertex> vertices = {
@@ -250,12 +123,12 @@ namespace wb {
         bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer);
+        vkCreateBuffer(renderDevice->device, &bufferInfo, nullptr, &vertexBuffer);
 
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
+        vkGetBufferMemoryRequirements(renderDevice->device, vertexBuffer, &memRequirements);
         VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+        vkGetPhysicalDeviceMemoryProperties(renderDevice->physicalDevice, &memProperties);
 
         u32 memtype;
         u32 memProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
@@ -271,13 +144,13 @@ namespace wb {
         allocMemInfo.allocationSize = memRequirements.size;
         allocMemInfo.memoryTypeIndex = memtype;
 
-        vkAllocateMemory(device, &allocMemInfo, nullptr, &vertexBufferMemory);
-        vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+        vkAllocateMemory(renderDevice->device, &allocMemInfo, nullptr, &vertexBufferMemory);
+        vkBindBufferMemory(renderDevice->device, vertexBuffer, vertexBufferMemory, 0);
 
         void* data;
-        vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+        vkMapMemory(renderDevice->device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
         memcpy(data, vertices.data(), (size_t) bufferInfo.size);
-        vkUnmapMemory(device, vertexBufferMemory);
+        vkUnmapMemory(renderDevice->device, vertexBufferMemory);
 
         auto vertShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\vert.spv");
         auto fragShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\frag.spv");
@@ -287,14 +160,14 @@ namespace wb {
         vsCreateInfo.codeSize = vertShaderCode.size();
         vsCreateInfo.pCode = reinterpret_cast<const u32*>(vertShaderCode.data());
         VkShaderModule vs;
-        vkCreateShaderModule(device, &vsCreateInfo, nullptr, &vs);
+        vkCreateShaderModule(renderDevice->device, &vsCreateInfo, nullptr, &vs);
 
         VkShaderModuleCreateInfo fsCreateInfo{};
         fsCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         fsCreateInfo.codeSize = fragShaderCode.size();
         fsCreateInfo.pCode = reinterpret_cast<const u32*>(fragShaderCode.data());
         VkShaderModule fs;
-        vkCreateShaderModule(device, &fsCreateInfo, nullptr, &fs);
+        vkCreateShaderModule(renderDevice->device, &fsCreateInfo, nullptr, &fs);
 
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -410,7 +283,7 @@ namespace wb {
         layoutInfo.bindingCount = 1;
         layoutInfo.pBindings = &uboLayoutBinding;
 
-        vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout);
+        vkCreateDescriptorSetLayout(renderDevice->device, &layoutInfo, nullptr, &descriptorSetLayout);
 
         VkDeviceSize bufferSize = sizeof(UBO);
 
@@ -424,12 +297,12 @@ namespace wb {
             bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-            vkCreateBuffer(device, &bufferInfo, nullptr, &uniformBuffers[i]);
+            vkCreateBuffer(renderDevice->device, &bufferInfo, nullptr, &uniformBuffers[i]);
 
             VkMemoryRequirements memRequirements;
-            vkGetBufferMemoryRequirements(device, uniformBuffers[i], &memRequirements);
+            vkGetBufferMemoryRequirements(renderDevice->device, uniformBuffers[i], &memRequirements);
             VkPhysicalDeviceMemoryProperties memProperties;
-            vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+            vkGetPhysicalDeviceMemoryProperties(renderDevice->physicalDevice, &memProperties);
 
             u32 memtype;
             u32 memProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
@@ -445,8 +318,8 @@ namespace wb {
             allocMemInfo.allocationSize = memRequirements.size;
             allocMemInfo.memoryTypeIndex = memtype;
 
-            vkAllocateMemory(device, &allocMemInfo, nullptr, &uniformBuffersMemory[i]);
-            vkBindBufferMemory(device, uniformBuffers[i], uniformBuffersMemory[i], 0);
+            vkAllocateMemory(renderDevice->device, &allocMemInfo, nullptr, &uniformBuffersMemory[i]);
+            vkBindBufferMemory(renderDevice->device, uniformBuffers[i], uniformBuffersMemory[i], 0);
         }
 
         VkDescriptorPoolSize poolSize{};
@@ -459,7 +332,7 @@ namespace wb {
         descPoolInfo.pPoolSizes = &poolSize;
         descPoolInfo.maxSets = static_cast<u32>(swapChainImages.size());
 
-        vkCreateDescriptorPool(device, &descPoolInfo, nullptr, &descriptorPool);
+        vkCreateDescriptorPool(renderDevice->device, &descPoolInfo, nullptr, &descriptorPool);
 
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocDSInfo{};
@@ -469,7 +342,7 @@ namespace wb {
         allocDSInfo.pSetLayouts = layouts.data();
 
         descriptorSets.resize(swapChainImages.size());
-        vkAllocateDescriptorSets(device, &allocDSInfo, descriptorSets.data());
+        vkAllocateDescriptorSets(renderDevice->device, &allocDSInfo, descriptorSets.data());
 
         for (size_t i = 0; i < swapChainImages.size(); i++) {
             VkDescriptorBufferInfo bufferInfo{};
@@ -488,7 +361,7 @@ namespace wb {
             descriptorWrite.pImageInfo = nullptr; // Optional
             descriptorWrite.pTexelBufferView = nullptr; // Optional
 
-            vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+            vkUpdateDescriptorSets(renderDevice->device, 1, &descriptorWrite, 0, nullptr);
         }
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -496,7 +369,7 @@ namespace wb {
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-        result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
+        result = vkCreatePipelineLayout(renderDevice->device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
 
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = rtvFormat;
@@ -534,7 +407,7 @@ namespace wb {
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        result = vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass);
+        result = vkCreateRenderPass(renderDevice->device, &renderPassInfo, nullptr, &renderPass);
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -554,7 +427,7 @@ namespace wb {
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
         pipelineInfo.basePipelineIndex = -1; // Optional
 
-        result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+        result = vkCreateGraphicsPipelines(renderDevice->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 
         RTVFBs.resize(RTVs.size());
 
@@ -572,15 +445,15 @@ namespace wb {
             framebufferInfo.height = 681;
             framebufferInfo.layers = 1;
 
-            vkCreateFramebuffer(device, &framebufferInfo, nullptr, &RTVFBs[i]);
+            vkCreateFramebuffer(renderDevice->device, &framebufferInfo, nullptr, &RTVFBs[i]);
         }
 
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = queueFamily;
+        poolInfo.queueFamilyIndex = renderDevice->queueFamilyIndex;
         poolInfo.flags = 0; // Optional
 
-        vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
+        vkCreateCommandPool(renderDevice->device, &poolInfo, nullptr, &commandPool);
 
         commandBuffers.resize(RTVFBs.size());
 
@@ -590,13 +463,13 @@ namespace wb {
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = (u32) commandBuffers.size();
 
-        vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data());
+        vkAllocateCommandBuffers(renderDevice->device, &allocInfo, commandBuffers.data());
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-        vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphore);
-        vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphore);
+        vkCreateSemaphore(renderDevice->device, &semaphoreInfo, nullptr, &imageAvailableSemaphore);
+        vkCreateSemaphore(renderDevice->device, &semaphoreInfo, nullptr, &renderFinishedSemaphore);
 
         frameIndex = 0;// swapChain.GetCurrentBackBufferIndex();
     }
@@ -631,14 +504,14 @@ namespace wb {
             mvp.m41 = cosf(t / 1000.0f);
             mvp.m42 = sinf(t / 1000.0f);
 
-            vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
+            vkAcquireNextImageKHR(renderDevice->device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
 
             UBO ubo = { mvp * ndc };
 
             void* data;
-            vkMapMemory(device, uniformBuffersMemory[frameIndex], 0, sizeof(ubo), 0, &data);
+            vkMapMemory(renderDevice->device, uniformBuffersMemory[frameIndex], 0, sizeof(ubo), 0, &data);
             memcpy(data, &ubo, sizeof(ubo));
-            vkUnmapMemory(device, uniformBuffersMemory[frameIndex]);
+            vkUnmapMemory(renderDevice->device, uniformBuffersMemory[frameIndex]);
 
             VkCommandBufferBeginInfo beginInfo{};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -686,7 +559,7 @@ namespace wb {
             submitInfo.signalSemaphoreCount = 1;
             submitInfo.pSignalSemaphores = signalSemaphores;
 
-            vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+            vkQueueSubmit(renderDevice->queues[0], 1, &submitInfo, VK_NULL_HANDLE);
 
             std::cout << '.';
 
@@ -700,7 +573,7 @@ namespace wb {
             presentInfo.pSwapchains = swapChains;
             presentInfo.pImageIndices = &frameIndex;
             presentInfo.pResults = nullptr; // Optional
-            vkQueuePresentKHR(queue, &presentInfo);
+            vkQueuePresentKHR(renderDevice->queues[0], &presentInfo);
         }
     }
 }

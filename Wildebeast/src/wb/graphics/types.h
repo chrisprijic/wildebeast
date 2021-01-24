@@ -3,10 +3,6 @@
 #include "wb/core/types.h"
 
 namespace wb {
-    typedef struct EngineCreateInfo {
-        pvoid NativeWindow;
-    } EngineCreateInfo;
-
     typedef enum class TEXTURE_FORMAT {
         UNKNOWN = 0,
         /// Four-component 128-bit typeless format with 32-bit channels. \n
