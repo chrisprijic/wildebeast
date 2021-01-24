@@ -2,7 +2,7 @@
 
 #include "platform/opengl/ogl_render_device.h"
 #include "platform/windows/windows_window.h"
-#include "platform/windows/windows_ogl_device_context.h"
+#include "platform/windows/windows_ogl_context.h"
 
 namespace wb {
     class WindowsOGLRenderDevice : public OGLRenderDevice {
@@ -16,6 +16,6 @@ namespace wb {
         virtual pvoid getNativeDevice() override;
     private:
         WindowsWindow* window;
-        OGLDeviceContext* deviceContext;
+        OGLContext* oglContext;
     };
 }
