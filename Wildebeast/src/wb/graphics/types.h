@@ -538,6 +538,16 @@ namespace wb {
         COPY_SOURCE = 0x04
     } SWAP_CHAIN_USAGE_FLAGS;
 
+    inline SWAP_CHAIN_USAGE_FLAGS operator|(SWAP_CHAIN_USAGE_FLAGS a, SWAP_CHAIN_USAGE_FLAGS b)
+    {
+        return static_cast<SWAP_CHAIN_USAGE_FLAGS>(static_cast<u64>(a) | static_cast<u64>(b));
+    }
+
+    inline u64 operator&(SWAP_CHAIN_USAGE_FLAGS a, SWAP_CHAIN_USAGE_FLAGS b)
+    {
+        return static_cast<u64>(a) & static_cast<u64>(b);
+    }
+
     typedef enum class SURFACE_TRANSFORM {
         OPTIMAL = 0,
         IDENTITY,

@@ -115,6 +115,8 @@ namespace wb {
                     physicalDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
                     physicalDevice = physdev;
                     break;
+                } else {
+                    WB_CORE_ERROR("physical device cannot be retrieved that has required swapchain support");
                 }
             }
         }
@@ -174,68 +176,7 @@ namespace wb {
         };
     }
 
-    void VkEngine::CreateSwapchain(SwapchainDesc& swapchainDesc, pvoid nativeWindow, VkRenderDevice* pRenderDevice, VkSwapchain** ppSwapchain) {
-        SwapchainDesc* scdesc = new SwapchainDesc();
-        memcpy(scdesc, &swapchainDesc, sizeof(swapchainDesc));
-
-        VkSwapchain* pSwapchain = new VkSwapchain{
-            scdesc,
-            pRenderDevice,
-        };
-
-        VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        surfaceCreateInfo.hwnd = (HWND) nativeWindow;
-        surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-
-        VkResult result = vkCreateWin32SurfaceKHR(pRenderDevice->instance, &surfaceCreateInfo, nullptr, &(pSwapchain->surface));
-
-        VkFormat rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;
-
-        VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pRenderDevice->physicalDevice, pSwapchain->surface, &surfaceCapabilities);
-
-        VkSwapchainCreateInfoKHR swapChainCreateInfo{};
-        swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapChainCreateInfo.surface = pSwapchain->surface;
-        swapChainCreateInfo.minImageCount = 2;
-        swapChainCreateInfo.imageFormat = rtvFormat;
-        swapChainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        swapChainCreateInfo.imageExtent = VkExtent2D{ 1264, 681 };
-        swapChainCreateInfo.imageArrayLayers = 1;
-        swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        swapChainCreateInfo.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-        swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapChainCreateInfo.clipped = VK_TRUE;
-        swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-        swapChainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
-
-        result = vkCreateSwapchainKHR(pRenderDevice->device, &swapChainCreateInfo, nullptr, &(pSwapchain->swapchain));
-
-        u32 imageCount = 0;
-        result = vkGetSwapchainImagesKHR(pRenderDevice->device, pSwapchain->swapchain, &imageCount, nullptr);
-        pSwapchain->swapchainImages.resize(imageCount);
-        pSwapchain->RTVs.resize(imageCount);
-        result = vkGetSwapchainImagesKHR(pRenderDevice->device, pSwapchain->swapchain, &imageCount, pSwapchain->swapchainImages.data());
-
-        for (u32 i = 0; i < pSwapchain->swapchainImages.size(); i++) {
-            VkImageViewCreateInfo imageViewCreateInfo{};
-            imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            imageViewCreateInfo.image = pSwapchain->swapchainImages[i];
-            imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            imageViewCreateInfo.format = rtvFormat;
-            imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-            imageViewCreateInfo.subresourceRange.levelCount = 1;
-            imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-            imageViewCreateInfo.subresourceRange.layerCount = 1;
-            result = vkCreateImageView(pRenderDevice->device, &imageViewCreateInfo, nullptr, &(pSwapchain->RTVs[i]));
-        }
-
-        *ppSwapchain = pSwapchain;
+    void VkEngine::CreateSwapchain(SwapchainDesc& swapchainDesc, pvoid nativeWindow, VkRenderDevice* pRenderDevice, VkDeviceContext* pDeviceContext, VkSwapchain** ppSwapchain) {
+        *ppSwapchain = new VkSwapchain(swapchainDesc, pRenderDevice, pDeviceContext, nativeWindow);
     }
 }

@@ -9,7 +9,7 @@ namespace wb {
     class VkEngine {
     public:
         static void CreateDeviceAndContext(VkRenderDevice** ppRenderDevice, VkDeviceContext** ppDeviceContext);
-        static void CreateSwapchain(SwapchainDesc& swapchainDesc, pvoid nativeWindow, VkRenderDevice* pRenderDevice, VkSwapchain** ppSwapchain);
+        static void CreateSwapchain(SwapchainDesc& swapchainDesc, pvoid nativeWindow, VkRenderDevice* pRenderDevice, VkDeviceContext* pDeviceContext, VkSwapchain** ppSwapchain);
     };
 }
 

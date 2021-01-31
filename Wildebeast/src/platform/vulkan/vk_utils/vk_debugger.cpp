@@ -10,7 +10,7 @@ namespace wb {
             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
             void* pUserData) {
 
-            std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+            WB_CORE_WARN("VulkanDebugCallback:\n    Message Type: {0}\n  Message: {1}", messageType, pCallbackData->pMessage);
 
             return VK_FALSE;
         }

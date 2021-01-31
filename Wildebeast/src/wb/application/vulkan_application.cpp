@@ -33,7 +33,7 @@ namespace wb {
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData) {
 
-        //std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        WB_CORE_WARN("VulkanDebugCallback:\n    Message Type: {0}\n  Message: {1}", messageType, pCallbackData->pMessage);
 
         return VK_FALSE;
     }
@@ -59,11 +59,11 @@ namespace wb {
         VkEngine::CreateDeviceAndContext(&renderDevice, &deviceContext);
 
         SwapchainDesc swapchainDesc;
-        swapchainDesc.Width = window->GetWidth();
-        swapchainDesc.Height = window->GetHeight();
+        swapchainDesc.Width = window->GetDrawWidth();
+        swapchainDesc.Height = window->GetDrawHeight();
         swapchainDesc.IsPrimary = true;
 
-        VkEngine::CreateSwapchain(swapchainDesc, window->GetNativeWindow(), renderDevice, &swapchain);
+        VkEngine::CreateSwapchain(swapchainDesc, window->GetNativeWindow(), renderDevice, deviceContext, &swapchain);
 
         // RENDER DATA
 
@@ -108,8 +108,8 @@ namespace wb {
         memcpy(data, vertices.data(), (size_t) bufferInfo.size);
         vkUnmapMemory(renderDevice->device, vertexBufferMemory);
 
-        auto vertShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\vert.spv");
-        auto fragShaderCode = readFile("C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast\\assets\\frag.spv");
+        auto vertShaderCode = readFile("C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\vert.spv");
+        auto fragShaderCode = readFile("C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast\\assets\\frag.spv");
 
         VkShaderModuleCreateInfo vsCreateInfo{};
         vsCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -243,10 +243,10 @@ namespace wb {
 
         VkDeviceSize bufferSize = sizeof(UBO);
 
-        uniformBuffers.resize(swapchain->swapchainImages.size());
-        uniformBuffersMemory.resize(swapchain->swapchainImages.size());
+        uniformBuffers.resize(swapchain->desc.BufferCount);
+        uniformBuffersMemory.resize(swapchain->desc.BufferCount);
 
-        for (size_t i = 0; i < swapchain->swapchainImages.size(); i++) {
+        for (size_t i = 0; i < swapchain->desc.BufferCount; i++) {
             VkBufferCreateInfo bufferInfo{};
             bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             bufferInfo.size = bufferSize;
@@ -280,27 +280,27 @@ namespace wb {
 
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = static_cast<u32>(swapchain->swapchainImages.size());
+        poolSize.descriptorCount = static_cast<u32>(swapchain->desc.BufferCount);
 
         VkDescriptorPoolCreateInfo descPoolInfo{};
         descPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descPoolInfo.poolSizeCount = 1;
         descPoolInfo.pPoolSizes = &poolSize;
-        descPoolInfo.maxSets = static_cast<u32>(swapchain->swapchainImages.size());
+        descPoolInfo.maxSets = static_cast<u32>(swapchain->desc.BufferCount);
 
         vkCreateDescriptorPool(renderDevice->device, &descPoolInfo, nullptr, &descriptorPool);
 
-        std::vector<VkDescriptorSetLayout> layouts(swapchain->swapchainImages.size(), descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(swapchain->desc.BufferCount, descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocDSInfo{};
         allocDSInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocDSInfo.descriptorPool = descriptorPool;
-        allocDSInfo.descriptorSetCount = static_cast<u32>(swapchain->swapchainImages.size());
+        allocDSInfo.descriptorSetCount = static_cast<u32>(swapchain->desc.BufferCount);
         allocDSInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(swapchain->swapchainImages.size());
+        descriptorSets.resize(swapchain->desc.BufferCount);
         vkAllocateDescriptorSets(renderDevice->device, &allocDSInfo, descriptorSets.data());
 
-        for (size_t i = 0; i < swapchain->swapchainImages.size(); i++) {
+        for (size_t i = 0; i < swapchain->desc.BufferCount; i++) {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffers[i];
             bufferInfo.offset = 0;

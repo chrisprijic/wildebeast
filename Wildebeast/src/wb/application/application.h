@@ -7,9 +7,6 @@
 #include "wb/graphics/device_context.h"
 #include "wb/graphics/render_device.h"
 #include "wb/math/math.h"
-#include "platform/vulkan/vk_render_device.h"
-#include "platform/vulkan/vk_device_context.h"
-#include "platform/vulkan/vk_swapchain.h"
 
 #ifdef WB_OPENGL
 // ogl
@@ -26,6 +23,9 @@
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_sdk_platform.h>
+#include "platform/vulkan/vk_render_device.h"
+#include "platform/vulkan/vk_device_context.h"
+#include "platform/vulkan/vk_swapchain.h"
 #endif
 namespace wb {
 	struct Vertex {
