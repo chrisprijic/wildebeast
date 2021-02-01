@@ -75,7 +75,6 @@ namespace wb {
 
 			//RenderDevice* renderDevice;
 			//Swapchain* swapchain; 
-			u32 frameIndex = 0;
 
 			//std::wstring projectDir = L"C:\\Users\\ChrisPrijic\\Documents\\work\\personal\\wildebeast";
 			std::wstring projectDir = L"C:\\Users\\chris\\Documents\\personal\\projects\\project_wildebeast";
@@ -112,15 +111,12 @@ namespace wb {
 			VkDeviceContext* deviceContext;
 			VkSwapchain* swapchain;
 			std::vector<VkFramebuffer> RTVFBs;
-			VkFormat rtvFormat = VK_FORMAT_B8G8R8A8_SRGB;;
 			VkDescriptorSetLayout descriptorSetLayout;
 			VkPipelineLayout pipelineLayout;
 			VkRenderPass renderPass;
 			VkPipeline graphicsPipeline;
 			VkCommandPool commandPool;
 			std::vector<VkCommandBuffer> commandBuffers;
-			VkSemaphore imageAvailableSemaphore;
-			VkSemaphore renderFinishedSemaphore;
 			VkBuffer vertexBuffer;
 			VkDeviceMemory vertexBufferMemory;
 			std::vector<VkBuffer> uniformBuffers;

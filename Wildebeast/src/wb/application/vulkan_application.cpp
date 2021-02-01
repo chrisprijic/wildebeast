@@ -321,7 +321,7 @@ namespace wb {
         }
 
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = rtvFormat;
+        colorAttachment.format = swapchain->colorFormat;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -365,6 +365,18 @@ namespace wb {
 
         result = vkCreatePipelineLayout(renderDevice->device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
 
+        VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
+        dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicStateInfo.pNext = nullptr;
+        dynamicStateInfo.flags = 0;
+
+        std::vector<VkDynamicState> dynamicStates = {
+            VK_DYNAMIC_STATE_LINE_WIDTH,
+        };
+
+        dynamicStateInfo.dynamicStateCount = dynamicStates.size();
+        dynamicStateInfo.pDynamicStates = dynamicStates.data();
+
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipelineInfo.stageCount = 2;
@@ -376,7 +388,7 @@ namespace wb {
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pDepthStencilState = nullptr; // Optional
         pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.pDynamicState = nullptr; // Optional
+        pipelineInfo.pDynamicState = &dynamicStateInfo; // Optional
         pipelineInfo.layout = pipelineLayout;
         pipelineInfo.renderPass = renderPass;
         pipelineInfo.subpass = 0;
@@ -420,14 +432,6 @@ namespace wb {
         allocInfo.commandBufferCount = (u32) commandBuffers.size();
 
         vkAllocateCommandBuffers(renderDevice->device, &allocInfo, commandBuffers.data());
-
-        VkSemaphoreCreateInfo semaphoreInfo{};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        vkCreateSemaphore(renderDevice->device, &semaphoreInfo, nullptr, &imageAvailableSemaphore);
-        vkCreateSemaphore(renderDevice->device, &semaphoreInfo, nullptr, &renderFinishedSemaphore);
-
-        frameIndex = 0;// swapChain.GetCurrentBackBufferIndex();
     }
 
 
@@ -460,9 +464,9 @@ namespace wb {
             mvp.m41 = cosf(t / 1000.0f);
             mvp.m42 = sinf(t / 1000.0f);
 
-            vkAcquireNextImageKHR(renderDevice->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &frameIndex);
-
             UBO ubo = { mvp * ndc };
+
+            u32 frameIndex = swapchain->GetCurrentBackBufferIndex();
 
             void* data;
             vkMapMemory(renderDevice->device, uniformBuffersMemory[frameIndex], 0, sizeof(ubo), 0, &data);
@@ -504,14 +508,14 @@ namespace wb {
             VkSubmitInfo submitInfo{};
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-            VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
+            VkSemaphore waitSemaphores[] = { swapchain->imageAcquiredSemaphores[frameIndex] };
             VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
             submitInfo.waitSemaphoreCount = 1;
             submitInfo.pWaitSemaphores = waitSemaphores;
             submitInfo.pWaitDstStageMask = waitStages;
             submitInfo.commandBufferCount = 1;
             submitInfo.pCommandBuffers = &commandBuffers[frameIndex];
-            VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
+            VkSemaphore signalSemaphores[] = { swapchain->renderCompleteSemaphores[frameIndex] };
             submitInfo.signalSemaphoreCount = 1;
             submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -519,17 +523,7 @@ namespace wb {
 
             std::cout << '.';
 
-            VkPresentInfoKHR presentInfo{};
-            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-            presentInfo.waitSemaphoreCount = 1;
-            presentInfo.pWaitSemaphores = signalSemaphores;
-            VkSwapchainKHR swapChains[] = { swapchain->swapchain };
-            presentInfo.swapchainCount = 1;
-            presentInfo.pSwapchains = swapChains;
-            presentInfo.pImageIndices = &frameIndex;
-            presentInfo.pResults = nullptr; // Optional
-            vkQueuePresentKHR(renderDevice->queues[0], &presentInfo);
+            swapchain->Present(0);
         }
     }
 }

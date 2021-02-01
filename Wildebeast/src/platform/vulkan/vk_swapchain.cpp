@@ -5,15 +5,11 @@
 
 namespace wb {
     VkSwapchain::VkSwapchain(const SwapchainDesc& desc, VkRenderDevice* renderDevice, VkDeviceContext* deviceContext, void* window)
-        : renderDevice(renderDevice), window(window), desiredBufferCount(desc.BufferCount), desiredPreTransform(desc.PreTransform), desc(desc) {
+        : renderDevice(renderDevice), deviceContext(deviceContext), window(window), desiredBufferCount(desc.BufferCount), desiredPreTransform(desc.PreTransform), desc(desc) {
         createSurface();
         createVulkanSwapchain();
         initBuffersAndViews();
         VK_CHECK_RESULT(acquireNextImage(deviceContext));
-    }
-
-    VkResult VkSwapchain::acquireNextImage(VkDeviceContext* deviceContext) {
-        return VK_SUCCESS;
     }
 
     void VkSwapchain::createSurface() {
@@ -95,9 +91,9 @@ if (!presentSupport) {
                 if (ReplacementFmtFound)
                 {
                     colorFormat = replacementColorFormat;
-                    auto NewColorBufferFormat = VkFormatToTexFormat(replacementColorFormat);
+                    auto newColorBufferFormat = VkFormatToTexFormat(replacementColorFormat);
                     WB_CORE_INFO("Requested color buffer format is not supported by the surface and will be replaced with a simiar one");
-                    desc.ColorBufferFormat = NewColorBufferFormat;
+                    desc.ColorBufferFormat = newColorBufferFormat;
                 } else
                 {
                     WB_CORE_WARN("Requested color buffer format is not supported by the surface");
@@ -252,6 +248,7 @@ if (!presentSupport) {
         imageAcquiredSemaphores.resize(swapchainImageCount);
         renderCompleteSemaphores.resize(swapchainImageCount);
         imageAcquiredFences.resize(swapchainImageCount);
+        fencesInFlight.resize(swapchainImageCount, false);
 
         for (u32 i = 0; i < swapchainImageCount; ++i) {
             VkSemaphoreCreateInfo semaphore_ci{};
@@ -277,6 +274,7 @@ if (!presentSupport) {
         VkDevice device = renderDevice->device;
 
         RTVs.resize(desc.BufferCount);
+        swapchainImagesInitialized.resize(desc.BufferCount, false);
         RTVFBs.resize(desc.BufferCount);
 
         u32 swapchainImageCount = desc.BufferCount;
@@ -301,5 +299,179 @@ if (!presentSupport) {
             imageViewCreateInfo.subresourceRange.layerCount = 1;
             VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &RTVs[i]));
         }
+    }
+
+    VkResult VkSwapchain::acquireNextImage(VkDeviceContext* deviceContext) {
+        VkDevice device = renderDevice->device;
+        u32 previousFrameIndex = currentBackBufferIndex;
+
+        if (fencesInFlight[previousFrameIndex]) {
+            VkFence previousFence = imageAcquiredFences[previousFrameIndex];
+            if (vkGetFenceStatus(device, previousFence) == VK_NOT_READY) {
+                VK_CHECK_RESULT(vkWaitForFences(device, 1, &previousFence, VK_TRUE, UINT64_MAX));
+            }
+            vkResetFences(device, 1, &previousFence);
+            fencesInFlight[previousFrameIndex] = false;
+        }
+
+        VkFence currentFence = imageAcquiredFences[currentBackBufferIndex];
+        VkSemaphore currentSemaphore = imageAcquiredSemaphores[currentBackBufferIndex];
+
+        VkResult res = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, currentSemaphore, currentFence, &currentBackBufferIndex);
+
+        fencesInFlight[currentBackBufferIndex] = (res == VK_SUCCESS);
+
+        if (res == VK_SUCCESS) {
+            // TODO (Chris): need to wait for the semaphore within the buffer/context
+            if (!swapchainImagesInitialized[currentBackBufferIndex]) {
+                // TODO (Chris): set render targets
+                // TODO (Chris): clear render target
+                swapchainImagesInitialized[currentBackBufferIndex] = true;
+            }
+            // TODO (Chris): set render targets
+        }
+
+        return res;
+    }
+
+    void VkSwapchain::Present(u32 syncInterval) {
+        if (syncInterval != 0 && syncInterval != 1) {
+            WB_CORE_WARN("vulkan only supports 0 and 1 sync intervals");
+        }
+
+        // TODO (Chris): unbind back buffer from context
+
+        if (!minimized) {
+            // TODO (Chris): transition back buffer to present
+            // TODO (Chris): add signal semaphore
+        }
+
+        // TODO (Chris): flush context
+
+        if (!minimized) {
+            VkPresentInfoKHR presentInfo = {};
+
+            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            presentInfo.pNext = nullptr;
+            presentInfo.waitSemaphoreCount = 1;
+            // Unlike fences or events, the act of waiting for a semaphore also unsignals that semaphore (6.4.2)
+            VkSemaphore waitSemaphore[] = { renderCompleteSemaphores[currentBackBufferIndex] };
+            presentInfo.pWaitSemaphores = waitSemaphore;
+            presentInfo.swapchainCount = 1;
+            presentInfo.pSwapchains = &swapchain;
+            presentInfo.pImageIndices = &currentBackBufferIndex;
+            VkResult result = VK_SUCCESS;
+            presentInfo.pResults = &result;
+
+            renderDevice->QueuePresent(presentInfo);
+
+            if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR) {
+                recreateVulkanSwapchain(deviceContext);
+                currentBackBufferIndex = desc.BufferCount - 1; // so we start at 0 next image acquire
+            } else {
+                VK_CHECK_RESULT(result);
+            }
+        }
+
+        if (desc.IsPrimary) {
+            // TODO (Chris): finish frame, release stale resources
+        }
+
+        if (!minimized) {
+            ++currentBackBufferIndex;
+            if (currentBackBufferIndex >= desc.BufferCount)
+                currentBackBufferIndex = 0;
+
+            bool enableVSync = syncInterval != 0;
+
+            VkResult err = (vsync == enableVSync ? acquireNextImage(deviceContext) : VK_ERROR_OUT_OF_DATE_KHR);
+            if (err == VK_SUBOPTIMAL_KHR || err == VK_ERROR_OUT_OF_DATE_KHR) {
+                vsync = enableVSync;
+                recreateVulkanSwapchain(deviceContext);
+                currentBackBufferIndex = desc.BufferCount - 1; // so we start at 0 next image acquire
+                err = acquireNextImage(deviceContext);
+            }
+            VK_CHECK_RESULT(err);
+        }
+    }
+
+    void VkSwapchain::waitForImageAcquiredFences() {
+        VkDevice device = renderDevice->device;
+        for (u32 i = 0; i < imageAcquiredFences.size(); ++i) {
+            if (fencesInFlight[i]) {
+                VkFence fence = imageAcquiredFences[i];
+                if (vkGetFenceStatus(device, fence) == VK_NOT_READY) {
+                    vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX);
+                }
+            }
+        }
+    }
+
+    void VkSwapchain::releaseSwapchainResources(VkDeviceContext* deviceContext, bool destroy) {
+        if (swapchain == VK_NULL_HANDLE) {
+            return;
+        }
+
+        if (deviceContext != nullptr) {
+            // TODO (Chris): flush context
+
+            // TODO (Chris): unbind back buffers from frame buffers
+        }
+
+        vkDeviceWaitIdle(renderDevice->device);
+
+        waitForImageAcquiredFences();
+
+        RTVs.clear();
+
+        imageAcquiredSemaphores.clear();
+        renderCompleteSemaphores.clear();
+        imageAcquiredFences.clear();
+        currentBackBufferIndex = 0;
+
+        if (destroy) {
+            vkDestroySwapchainKHR(renderDevice->device, swapchain, NULL);
+            swapchain = VK_NULL_HANDLE;
+        }
+    }
+
+    void VkSwapchain::recreateVulkanSwapchain(VkDeviceContext* deviceContext) {
+        releaseSwapchainResources(deviceContext, false);
+
+        {
+            VkPhysicalDevice physicalDevice = renderDevice->physicalDevice;
+
+            VkSurfaceCapabilitiesKHR surfCapabilities;
+
+            VkResult res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfCapabilities);
+            if (res == VK_ERROR_SURFACE_LOST_KHR) {
+                if (swapchain != VK_NULL_HANDLE) {
+                    vkDestroySwapchainKHR(renderDevice->device, swapchain, NULL);
+                    swapchain = VK_NULL_HANDLE;
+                }
+
+                createSurface();
+            }
+
+            createVulkanSwapchain();
+            initBuffersAndViews();
+        }
+    }
+
+    void VkSwapchain::Resize(u32 newWidth, u32 newHeight, SURFACE_TRANSFORM newPreTransform) {
+        bool recreate = false;
+
+        if (desc.Width != newWidth || desc.Height != newHeight || desc.PreTransform != newPreTransform) {
+            recreate = true;
+        }
+
+        if (recreate) {
+            if (deviceContext) {
+                recreateVulkanSwapchain(deviceContext);
+                VK_CHECK_RESULT(acquireNextImage(deviceContext));
+            }
+        }
+
+        minimized = (newWidth == 0 && newHeight == 0);
     }
 }

@@ -6,6 +6,8 @@
 namespace wb {
     class VkRenderDevice {
     public:
+        void QueuePresent(VkPresentInfoKHR si) { vkQueuePresentKHR(queues[0], &si);; }
+
         VkPhysicalDevice physicalDevice;
         VkDevice device;
         VkInstance instance;
